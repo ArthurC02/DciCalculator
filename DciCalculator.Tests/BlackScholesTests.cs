@@ -5,14 +5,14 @@ using Xunit;
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// Black-Scholes ¼Ò«¬³æ¤¸´ú¸Õ
-/// ÅçÃÒ­pºâºë«×¡B¼Æ­ÈÃ­©w©Ê¡B®Ä¯àÀu¤Æ
+/// Black-Scholes å®šåƒ¹æ¸¬è©¦ã€‚
+/// è¦†è“‹æœŸæ¬Šåƒ¹æ ¼ã€åˆ°æœŸè¡Œç‚ºã€Put-Call Parityã€éš±å«æ³¢å‹•ç‡åæ¨ç­‰æƒ…å¢ƒã€‚
 /// </summary>
 public class BlackScholesTests
 {
-    private const double Tolerance = 1e-4; // ºë«×¡G¤p¼ÆÂI«á²Ä 4 ¦ì
+    private const double Tolerance = 1e-4; // ç²¾åº¦ï¼šæ¯”è¼ƒå–è‡³ 4 ä½
 
-    #region °ò¥»©w»ù´ú¸Õ
+    #region åŸºæœ¬å®šåƒ¹æ¡ˆä¾‹
 
     [Fact]
     public void Price_ATMCallOption_ReturnsCorrectValue()
@@ -27,7 +27,7 @@ public class BlackScholesTests
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ²z½×»ù¬ù 10.45
+        // Assert: æœŸæœ› Call åƒ¹æ ¼ç´„ 10.45
         Assert.InRange(price, 10.40, 10.50);
     }
 
@@ -44,7 +44,7 @@ public class BlackScholesTests
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Put);
 
-        // Assert: ²z½×»ù¬ù 5.57 (®Ú¾Ú Put-Call Parity)
+        // Assert: æœŸæœ› Put åƒ¹æ ¼ç´„ 5.57 (ç¬¦åˆ Put-Call Parity)
         Assert.InRange(price, 5.50, 5.65);
     }
 
@@ -60,8 +60,7 @@ public class BlackScholesTests
 
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
-
-        // Assert: »ù®æ > ¤º§t»ù­È (10.0)
+        // Assert: åƒ¹æ ¼é«˜æ–¼æœ€ä½åˆç†ä¸‹é™ (10.0)
         Assert.True(price > 10.0);
         Assert.InRange(price, 15.0, 18.0);
     }
@@ -78,15 +77,14 @@ public class BlackScholesTests
 
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Put);
-
-        // Assert: »ù®æ > 0 ¦ı¸û¤p
+        // Assert: åƒ¹æ ¼ç‚ºæ­£ä¸”è½åœ¨åˆç†ç¯„åœ
         Assert.True(price > 0);
         Assert.InRange(price, 2.0, 4.0);
     }
 
     #endregion
 
-    #region Put-Call Parity ´ú¸Õ
+    #region Put-Call Parity é©—è­‰
 
     [Theory]
     [InlineData(100.0, 100.0, 0.05, 0.20, 1.0)]
@@ -109,23 +107,23 @@ public class BlackScholesTests
 
     #endregion
 
-    #region Ãä¬É±ø¥ó´ú¸Õ
+    #region é‚Šç•Œèˆ‡æ¥µç«¯è¡Œç‚º
 
     [Fact]
     public void Price_NearMaturity_ReturnsIntrinsicValue()
     {
-        // Arrange: §Y±N¨ì´Á¡]1 ¬í¡^
+        // Arrange: å³å°‡åˆ°æœŸ (è·é›¢åˆ°æœŸç´„ 1 ç§’)
         double spot = 110.0;
         double strike = 100.0;
         double rate = 0.05;
         double volatility = 0.20;
-        double timeToMaturity = 1.0 / (365.0 * 24.0 * 3600.0); // 1 ¬í
+        double timeToMaturity = 1.0 / (365.0 * 24.0 * 3600.0); // 1 ç§’ (æ¥µçŸ­åˆ°æœŸ)
 
         // Act
         double callPrice = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
         double putPrice = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Put);
 
-        // Assert: ¬ùµ¥©ó¤º§t»ù­È
+        // Assert: åƒ¹æ ¼è²¼è¿‘å…§å«åƒ¹å€¼
         double callIntrinsic = Math.Max(0, spot - strike);
         double putIntrinsic = Math.Max(0, strike - spot);
 
@@ -136,7 +134,7 @@ public class BlackScholesTests
     [Fact]
     public void Price_ZeroVolatility_ReturnsIntrinsicValue()
     {
-        // Arrange: ªi°Ê«×·¥§C
+        // Arrange: æ³¢å‹•ç‡è¶¨è¿‘ 0
         double spot = 110.0;
         double strike = 100.0;
         double rate = 0.05;
@@ -146,7 +144,7 @@ public class BlackScholesTests
         // Act
         double callPrice = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ¬ùµ¥©ó¤º§t»ù­È
+        // Assert: åƒ¹æ ¼å³ç‚ºå…§å«åƒ¹å€¼
         double intrinsic = Math.Max(0, spot - strike);
         Assert.Equal(intrinsic, callPrice, precision: 1);
     }
@@ -164,7 +162,7 @@ public class BlackScholesTests
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ¬ùµ¥©ó S - K*e^(-rT)
+        // Assert: Deep ITM ç†è«–è¿‘ä¼¼ S - K*e^(-rT)
         double expected = spot - strike * Math.Exp(-rate * timeToMaturity);
         Assert.Equal(expected, price, precision: 2);
     }
@@ -182,13 +180,13 @@ public class BlackScholesTests
         // Act
         double price = BlackScholes.Price(spot, strike, rate, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ¬ùµ¥©ó 0
+        // Assert: Deep OTM åƒ¹æ ¼æ¥è¿‘ 0
         Assert.InRange(price, 0.0, 0.001);
     }
 
     #endregion
 
-    #region °Ñ¼ÆÅçÃÒ´ú¸Õ
+    #region åƒæ•¸é©—è­‰èˆ‡ç•°å¸¸
 
     [Fact]
     public void Price_NegativeSpot_ThrowsException()
@@ -227,7 +225,7 @@ public class BlackScholesTests
 
     #endregion
 
-    #region Áô§tªi°Ê«×´ú¸Õ
+    #region éš±å«æ³¢å‹•ç‡åæ¨
 
     [Fact]
     public void ImpliedVolatility_KnownPrice_RecoversVolatility()
@@ -239,15 +237,15 @@ public class BlackScholesTests
         double trueVolatility = 0.25;
         double timeToMaturity = 1.0;
 
-        // ­pºâ²z½×»ù®æ
+        // Arrange: å…ˆç”¢ç”Ÿç†è«–åƒ¹æ ¼
         double marketPrice = BlackScholes.Price(
             spot, strike, rate, trueVolatility, timeToMaturity, OptionType.Call);
 
-        // Act: ¤Ï±ÀÁô§tªi°Ê«×
+        // Act: åæ¨éš±å«æ³¢å‹•ç‡
         double impliedVol = BlackScholes.ImpliedVolatility(
             marketPrice, spot, strike, rate, timeToMaturity, OptionType.Call);
 
-        // Assert: À³¸Ó±µªñ­ì©lªi°Ê«×
+        // Assert: å›å¾©åŸæœ¬è¨­å®šçš„æ³¢å‹•ç‡
         Assert.Equal(trueVolatility, impliedVol, precision: 4);
     }
 
@@ -255,7 +253,7 @@ public class BlackScholesTests
     public void ImpliedVolatility_NegativePrice_ReturnsNaN()
     {
         // Arrange
-        double marketPrice = -10.0; // µL®Ä»ù®æ
+        double marketPrice = -10.0; // éæ³•åƒ¹æ ¼
 
         // Act
         double impliedVol = BlackScholes.ImpliedVolatility(
@@ -267,27 +265,27 @@ public class BlackScholesTests
 
     #endregion
 
-    #region ºë«×´ú¸Õ¡]¶×²v¤p¼ÆÂI²Ä 4 ¦ì¡^
+    #region FX å ´æ™¯ç²¾åº¦æ¸¬è©¦ (ä¿ç•™ 4 ä½å°æ•¸)
 
     [Fact]
     public void Price_FxRateScenario_MaintainsPrecision()
     {
-        // Arrange: USD/TWD ³õ´º
+        // Arrange: USD/TWD å ´æ™¯
         double spot = 30.5000;      // TWD/USD
         double strike = 31.0000;
         double rate = 0.015;        // TWD 1.5%
         double volatility = 0.10;   // 10%
-        double timeToMaturity = 90.0 / 365.0; // 90 ¤Ñ
+        double timeToMaturity = 90.0 / 365.0; // 90 å¤©
 
         // Act
         double putPrice = BlackScholes.Price(
             spot, strike, rate, volatility, timeToMaturity, OptionType.Put);
 
-        // Assert: »ù®æÀ³¸Ó¬O¦X²z½d³ò¥Bºë½T¨ì²Ä 4 ¦ì
+        // Assert: åƒ¹æ ¼åˆç†ä¸”å››ä½å°æ•¸ç©©å®š
         Assert.True(putPrice > 0);
-        Assert.True(putPrice < strike); // ²z©ÊÀË¬d
+        Assert.True(putPrice < strike); // åƒ¹æ ¼ä½æ–¼å±¥ç´„åƒ¹ (åˆç†)
 
-        // ÅçÃÒºë«×¡G¥|±Ë¤­¤J¨ì²Ä 4 ¦ì«áÀ³¸Ó¬Û¦P
+        // è£œå……ï¼šå››æ¨äº”å…¥å¾Œä»èˆ‡åŸå€¼ä¸€è‡´ (å››ä½ç²¾åº¦)
         double rounded = Math.Round(putPrice, 4);
         Assert.Equal(rounded, putPrice, precision: 4);
     }

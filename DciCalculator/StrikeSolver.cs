@@ -4,33 +4,32 @@ using DciCalculator.Models;
 namespace DciCalculator;
 
 /// <summary>
-/// Strike ¨D¸Ñ¾¹
-/// ¤Ï±À¹F¨ì¥Ø¼Ğ Coupon ©Ò»İªº Strike
+/// Strike æ±‚è§£å™¨ã€‚
+/// ç”¨æ–¼åæ¨é”æˆç›®æ¨™ Coupon æ‰€éœ€çš„è¡Œä½¿åƒ¹ (Strike)ã€‚
 /// 
-/// ¨Ï¥Î³õ´º¡G
-/// - «È¤á­n¨D¦~¤Æ¦¬¯q²v 8%
-/// - ¨t²Î¦Û°Ê­pºâ»İ­n³]©w Strike = 29.85
+/// ä½¿ç”¨å ´æ™¯ï¼š
+/// - å®¢æˆ¶å¸Œæœ›é”æˆå¹´åŒ–æ”¶ç›Š 8%
+/// - éœ€é€éèª¿æ•´è¡Œä½¿åƒ¹æ‰¾åˆ°å°æ‡‰çš„çµæ§‹ Strikeï¼ˆä¾‹å¦‚å¾—åˆ° 29.85ï¼‰
 /// 
-/// ¤èªk¡GNewton-Raphson ­¡¥N¨D¸Ñ
+/// æ–¹æ³•ï¼šNewton-Raphson æ•¸å€¼è¿­ä»£ã€‚
 /// </summary>
 public static class StrikeSolver
 {
-    private const double Tolerance = 1e-4;      // Coupon ºë«× 0.01%
-    private const int MaxIterations = 50;       // ³Ì¤j­¡¥N¦¸¼Æ
-    private const double MinStrikeRatio = 0.80; // Strike ³Ì¤p¬° Spot ªº 80%
-    private const double MaxStrikeRatio = 1.20; // Strike ³Ì¤j¬° Spot ªº 120%
+    private const double Tolerance = 1e-4;      // Coupon èª¤å·® 0.01%
+    private const int MaxIterations = 50;       // æœ€å¤§è¿­ä»£æ¬¡æ•¸
+    private const double MinStrikeRatio = 0.80; // Strike ä¸ä½æ–¼ Spot çš„ 80%
+    private const double MaxStrikeRatio = 1.20; // Strike ä¸é«˜æ–¼ Spot çš„ 120%
 
     /// <summary>
-    /// ¨D¸Ñ¹F¨ì¥Ø¼Ğ Coupon ©Ò»İªº Strike
+    /// åæ¨é”æˆç›®æ¨™ Coupon æ‰€éœ€çš„ Strikeã€‚
     /// 
-    /// ­ì²z¡G
-    /// Strike ¡õ ¡÷ Put ´ÁÅv»ù­È ¡õ ¡÷ ´ÁÅv§Q®§ ¡õ ¡÷ Coupon ¡õ
-    /// Strike ¡ô ¡÷ Put ´ÁÅv»ù­È ¡ô ¡÷ ´ÁÅv§Q®§ ¡ô ¡÷ Coupon ¡ô
+    /// èªªæ˜ï¼šè³£å‡º Put æ”¶å–æœŸæ¬Šåƒ¹æ ¼ + å­˜æ¬¾åˆ©æ¯ â†’ å¹´åŒ– Couponã€‚
+    /// èª¿æ•´ Strike æœƒæ”¹è®Š Put åƒ¹æ ¼ï¼Œé€²è€Œå½±éŸ¿ç¸½åˆ©æ¯èˆ‡ Couponã€‚
     /// </summary>
-    /// <param name="input">DCI ¿é¤J¡]Strike ­È±N³Q©¿²¤¡^</param>
-    /// <param name="targetCoupon">¥Ø¼Ğ¦~¤Æ¦¬¯q²v¡]¨Ò¦p 0.08 = 8%¡^</param>
-    /// <param name="initialGuess">Strike ªì©l²q´ú¡]¹w³]¨Ï¥Î Spot * 0.98¡^</param>
-    /// <returns>¹F¨ì¥Ø¼Ğ Coupon ªº Strike¡A­YµLªk¦¬ÀÄ«hªğ¦^ NaN</returns>
+    /// <param name="input">DCI è¼¸å…¥ï¼ˆStrike å°‡è¢«å‹•æ…‹æ›¿æ›ï¼‰</param>
+    /// <param name="targetCoupon">ç›®æ¨™å¹´åŒ– Coupon (ä¾‹å¦‚ 0.08 = 8%)</param>
+    /// <param name="initialGuess">åˆå§‹ Strike ä¼°è¨ˆï¼ˆé è¨­ Spot * 0.98ï¼‰</param>
+    /// <returns>å°æ‡‰ Strikeï¼›è‹¥ç„¡æ³•æ”¶æ–‚æœƒæ“²å‡ºä¾‹å¤–</returns>
     public static decimal SolveStrike(
         DciInput input,
         double targetCoupon,
@@ -40,43 +39,43 @@ public static class StrikeSolver
 
         if (targetCoupon <= 0)
             throw new ArgumentOutOfRangeException(nameof(targetCoupon),
-                "¥Ø¼Ğ Coupon ¥²¶· > 0");
+                "ç›®æ¨™ Coupon å¿…é ˆ > 0");
 
-        // ªì©l²q´ú¡G²¤§C©ó Spot¡]DCI ºD¨Ò¡^
+        // åˆå§‹çŒœæ¸¬ï¼šæ¥è¿‘ Spotï¼ˆDCI çµæ§‹ç‚ºè³£å‡º Putï¼‰
         decimal spotMid = input.SpotQuote.Mid;
         decimal strike = initialGuess ?? spotMid * 0.98m;
 
-        // Strike ½d³ò­­¨î
+        // Strike é‚Šç•Œç¯„åœï¼ˆé¢¨æ§é™åˆ¶ï¼‰
         decimal minStrike = spotMid * (decimal)MinStrikeRatio;
         decimal maxStrike = spotMid * (decimal)MaxStrikeRatio;
 
         for (int i = 0; i < MaxIterations; i++)
         {
-            // 1. ­pºâ·í«e Strike ªº Coupon
+            // 1. è¨ˆç®—ç›®å‰ Strike çš„ Coupon
             double currentCoupon = CalculateCoupon(input, strike);
             double diff = currentCoupon - targetCoupon;
 
-            // 2. ¦¬ÀÄÀË¬d
+            // 2. èª¤å·®æª¢æŸ¥
             if (Math.Abs(diff) < Tolerance)
                 return Math.Round(strike, 4, MidpointRounding.AwayFromZero);
 
-            // 3. ­pºâ¾É¼Æ¡]dCoupon / dStrike¡^
+            // 3. è¨ˆç®—å°æ•¸ dCoupon / dStrike
             double derivative = CalculateCouponDerivative(input, strike);
 
-            // Á×§K¾É¼Æ¹L¤p
+            // ä½å°æ•¸é˜²æ­¢éåº¦æ­¥é•·
             if (Math.Abs(derivative) < 1e-10)
                 break;
 
-            // 4. Newton-Raphson §ó·s
+            // 4. Newton-Raphson æ›´æ–°
             double strikeD = (double)strike;
             double strikeNew = strikeD - diff / derivative;
 
-            // ­­¨î§ó·s´T«×¡]¨¾¤î¾_Àú¡^
-            double maxChange = strikeD * 0.1; // ³Ì¦hÅÜ°Ê 10%
+            // æ§åˆ¶å–®æ­¥æœ€å¤§è®Šå‹•ï¼ˆç©©å®šæ”¶æ–‚ï¼‰
+            double maxChange = strikeD * 0.1; // æœ€å¤§ 10% è®Šå‹•
             strikeNew = Math.Clamp(strikeNew, strikeD - maxChange, strikeD + maxChange);
             strikeNew = Math.Clamp(strikeNew, (double)minStrike, (double)maxStrike);
 
-            // 5. ÀË¬d¬O§_¦¬ÀÄ
+            // 5. æ”¶æ–‚åˆ¤æ–·
             decimal strikeNewDecimal = (decimal)strikeNew;
             if (Math.Abs(strikeNewDecimal - strike) < 0.0001m)
                 return Math.Round(strikeNewDecimal, 4, MidpointRounding.AwayFromZero);
@@ -84,21 +83,20 @@ public static class StrikeSolver
             strike = strikeNewDecimal;
         }
 
-        // ¥¼¦¬ÀÄ¡Gªğ¦^ NaN¡]Âà¦¨ decimal ·|©ß¨Ò¥~¡A§ï¥Î¯S®í­È¡^
+        // æœªæ”¶æ–‚ï¼šæ“²å‡ºä¾‹å¤–ï¼ˆdecimal ç„¡ NaNï¼‰
         throw new InvalidOperationException(
-            $"Strike ¨D¸Ñ¥¼¦¬ÀÄ¡C¥Ø¼Ğ Coupon: {targetCoupon:P2}, " +
-            $"³Ì«á¹Á¸Õ Strike: {strike:F4}, Coupon: {CalculateCoupon(input, strike):P2}");
+            $"Strike æ±‚è§£æœªæ”¶æ–‚ã€‚ç›®æ¨™ Coupon: {targetCoupon:P2}, æœ€çµ‚ Strike: {strike:F4}, Coupon: {CalculateCoupon(input, strike):P2}");
     }
 
     /// <summary>
-    /// ²£¥Í Strike Ladder¡]¤@¨t¦C Strike ¤Î¹ïÀ³ Coupon¡^
-    /// ¥Î©ó®i¥Üµ¹«È¤á¿ï¾Ü
+    /// ç”¢ç”Ÿ Strike æ¢¯å½¢ (Strike Ladder)ï¼šå¤šå€‹ Strike èˆ‡å…¶å°æ‡‰ Couponã€‚
+    /// ç”¨æ–¼å±•ç¤ºä¸åŒè¡Œä½¿åƒ¹å°å ±é…¬çš„å½±éŸ¿èˆ‡å®¢æˆ¶æ¯”è¼ƒã€‚
     /// </summary>
-    /// <param name="input">DCI ¿é¤J</param>
-    /// <param name="strikeCount">Strike ¼Æ¶q</param>
-    /// <param name="minStrikeRatio">³Ì¤p Strike¡]¬Û¹ï Spot¡^</param>
-    /// <param name="maxStrikeRatio">³Ì¤j Strike¡]¬Û¹ï Spot¡^</param>
-    /// <returns>Strike ¤Î¹ïÀ³ Coupon ªº¦Cªí</returns>
+    /// <param name="input">DCI è¼¸å…¥</param>
+    /// <param name="strikeCount">æ¢¯å½¢ç¯€é»æ•¸</param>
+    /// <param name="minStrikeRatio">æœ€å° Strikeï¼ˆç›¸å° Spotï¼‰</param>
+    /// <param name="maxStrikeRatio">æœ€å¤§ Strikeï¼ˆç›¸å° Spotï¼‰</param>
+    /// <returns>(Strike, Coupon) åˆ—è¡¨</returns>
     public static IReadOnlyList<(decimal Strike, double Coupon)> GenerateStrikeLadder(
         DciInput input,
         int strikeCount = 10,
@@ -108,7 +106,7 @@ public static class StrikeSolver
         ArgumentNullException.ThrowIfNull(input);
 
         if (strikeCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(strikeCount), "¼Æ¶q¥²¶· > 0");
+            throw new ArgumentOutOfRangeException(nameof(strikeCount), "ç¯€é»æ•¸éœ€ > 0");
 
         decimal spotMid = input.SpotQuote.Mid;
         decimal minStrike = spotMid * (decimal)minStrikeRatio;
@@ -131,23 +129,23 @@ public static class StrikeSolver
     }
 
     /// <summary>
-    /// ­pºâµ¹©w Strike ªº Coupon
+    /// è¨ˆç®—æŒ‡å®š Strike çš„ Couponã€‚
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double CalculateCoupon(DciInput input, decimal strike)
     {
-        // «Ø¥ß·sªº input¡A´À´« Strike
+        // å»ºç«‹æ–°çš„è¼¸å…¥ï¼ˆæ›¿æ› Strikeï¼‰
         var modifiedInput = input with { Strike = strike };
 
-        // ­pºâ³ø»ù
+        // å ±åƒ¹è¨ˆç®—
         var quote = DciPricer.Quote(modifiedInput);
 
         return quote.CouponAnnual;
     }
 
     /// <summary>
-    /// ­pºâ dCoupon / dStrike¡]¼Æ­È¾É¼Æ¡^
-    /// ¨Ï¥Î¤¤¥¡®t¤Àªk¡Gf'(x) ? [f(x+h) - f(x-h)] / (2h)
+    /// è¨ˆç®— dCoupon / dStrikeï¼ˆå° Strike çš„æ•æ„Ÿåº¦ï¼‰ã€‚
+    /// ä½¿ç”¨ä¸­å¤®å·®åˆ†è¿‘ä¼¼ï¼šf'(x) â‰ˆ [f(x+h) - f(x-h)] / (2h)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double CalculateCouponDerivative(DciInput input, decimal strike)
@@ -166,11 +164,11 @@ public static class StrikeSolver
     }
 
     /// <summary>
-    /// ÅçÃÒ Strike ¬O§_¦X²z
+    /// åˆ¤æ–· Strike æ˜¯å¦åˆç†ï¼ˆç›¸å° Spot åœ¨å…è¨±ç¯„åœï¼‰ã€‚
     /// </summary>
     /// <param name="strike">Strike</param>
     /// <param name="spot">Spot</param>
-    /// <returns>True ªí¥Ü¦X²z</returns>
+    /// <returns>True ï¿½ï¿½ï¿½Ü¦Xï¿½z</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStrikeReasonable(decimal strike, decimal spot)
     {
@@ -179,13 +177,12 @@ public static class StrikeSolver
 
         double ratio = (double)(strike / spot);
 
-        // Strike À³¸Ó¦b Spot ªº 80% ~ 120% ¤§¶¡
+        // Strike ä½æ–¼ Spot çš„ 80% ~ 120% ä¹‹é–“
         return ratio >= MinStrikeRatio && ratio <= MaxStrikeRatio;
     }
 
     /// <summary>
-    /// ­pºâ³Ì¤j¥i¹F Coupon¡]Strike = Spot * 1.2¡^
-    /// ¥Î©óÀË¬d¥Ø¼Ğ Coupon ¬O§_¥i¹F
+    /// è¨ˆç®—æœ€å¤§å¯èƒ½ Couponï¼ˆStrike = Spot * 1.2ï¼‰ã€‚ç”¨æ–¼æª¢æŸ¥ç›®æ¨™ Coupon æ˜¯å¦å¯é”æˆã€‚
     /// </summary>
     public static double CalculateMaxCoupon(DciInput input)
     {
@@ -194,7 +191,7 @@ public static class StrikeSolver
     }
 
     /// <summary>
-    /// ­pºâ³Ì¤p Coupon¡]Strike = Spot * 0.8¡^
+    /// è¨ˆç®—æœ€å°å¯èƒ½ Couponï¼ˆStrike = Spot * 0.8ï¼‰ã€‚
     /// </summary>
     public static double CalculateMinCoupon(DciInput input)
     {

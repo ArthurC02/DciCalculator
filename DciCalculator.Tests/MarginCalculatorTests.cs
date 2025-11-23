@@ -1,11 +1,9 @@
-using DciCalculator;
-using DciCalculator.Models;
 using Xunit;
 
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// MarginCalculator �椸����
+/// 保證金／價差調整 (MarginCalculator) 測試：驗證價差、百分比折減與反求所需保證金。
 /// </summary>
 public class MarginCalculatorTests
 {
@@ -50,7 +48,7 @@ public class MarginCalculatorTests
         double margin = MarginCalculator.SolveMarginForTargetCoupon(
             theoreticalCoupon, targetCoupon);
 
-        // Assert: margin ? 20%
+        // Assert: 需要的折減幅度約 20%
         Assert.InRange(margin, 0.15, 0.25);
     }
 

@@ -3,14 +3,14 @@ using DciCalculator.Models;
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¦±½u«Øºc¾¹¡]Curve Bootstrapper¡^
-/// ±q¥«³õ¤u¨ã«Øºc¹s®§§Q²v¦±½u
+/// æ›²ç·šå±•æœŸ/æŠ½å–å·¥å…· (Curve Bootstrapper)
+/// ç”±å¸‚å ´å·¥å…·é€æ­¥æ§‹å»ºé›¶åˆ©ç‡æ›²ç·šã€‚
 /// 
-/// Bootstrap ºtºâªk¡G
-/// 1. «ö´Á­­±Æ§Ç¤u¨ã
-/// 2. ±qµu´Á¨ìªø´Á¨Ì§Ç¨D¸Ñ
-/// 3. Deposit ¡÷ ª½±µ­pºâ Zero Rate
-/// 4. Swap ¡÷ ­¡¥N¨D¸Ñ¡]¨Ï¥Î¤wª¾ªºµu´Á¦±½u¡^
+/// æµç¨‹ï¼š
+/// 1. æ”¶é›†ä¸¦æ’åºè¼¸å…¥å·¥å…· (Tenor ç”±å°è‡³å¤§)
+/// 2. é©—è­‰è³‡æ–™èˆ‡åŸºæº–æ—¥ä¸€è‡´
+/// 3. Depositï¼šé–‰å¼è¨ˆç®— Zero Rate
+/// 4. Swapï¼šå¹³åƒ¹æ¢ä»¶åæ¨æœ«ç«¯ DFï¼Œå¿…è¦æ™‚æ”¹ç”¨ Newton-Raphson è¿­ä»£
 /// </summary>
 public sealed class CurveBootstrapper
 {
@@ -25,11 +25,11 @@ public sealed class CurveBootstrapper
     }
 
     /// <summary>
-    /// Bootstrap ¥D¤èªk
+    /// åŸ·è¡Œå±•æœŸä¸»ç¨‹åº
     /// </summary>
-    /// <param name="instruments">¥«³õ¤u¨ã¶°¦X</param>
-    /// <param name="interpolationMethod">´¡­È¤èªk</param>
-    /// <returns>«Øºc§¹¦¨ªº¹s®§¦±½u</returns>
+    /// <param name="instruments">å¸‚å ´å·¥å…·é›†åˆ</param>
+    /// <param name="interpolationMethod">æ’å€¼æ–¹æ³•</param>
+    /// <returns>é›¶åˆ©ç‡æ›²ç·š</returns>
     public IZeroCurve Bootstrap(
         IEnumerable<MarketInstrument> instruments,
         InterpolationMethod interpolationMethod = InterpolationMethod.Linear)
@@ -39,20 +39,20 @@ public sealed class CurveBootstrapper
         var instrumentList = instruments.OrderBy(i => i.Tenor).ToList();
 
         if (instrumentList.Count == 0)
-            throw new ArgumentException("¦Ü¤Ö»İ­n¤@­Ó¥«³õ¤u¨ã", nameof(instruments));
+            throw new ArgumentException("è‡³å°‘éœ€è¦ä¸€å€‹å¸‚å ´å·¥å…·", nameof(instruments));
 
-        // ÅçÃÒ¤u¨ã
+        // é©—è­‰è¼¸å…¥å·¥å…·
         ValidateInstruments(instrumentList);
 
-        // «Øºc¦±½u¸`ÂI
+        // ç´¯ç©ç”Ÿæˆçš„ç¯€é»
         var curvePoints = new List<CurvePoint>();
 
-        // ³v¨B Bootstrap
+        // é€æ­¥å±•æœŸ/æŠ½å–
         for (int i = 0; i < instrumentList.Count; i++)
         {
             var instrument = instrumentList[i];
 
-            // ®Ú¾Ú¤u¨ãÃş«¬¿ï¾Ü¤èªk
+            // ä¾å·¥å…·é¡å‹é¸æ“‡å±•æœŸæ–¹å¼
             CurvePoint point = instrument.InstrumentType switch
             {
                 MarketInstrumentType.Deposit => BootstrapDeposit((DepositInstrument)instrument),
@@ -60,18 +60,18 @@ public sealed class CurveBootstrapper
                     (SwapInstrument)instrument,
                     CreateIntermediateCurve(curvePoints, interpolationMethod)
                 ),
-                _ => throw new NotSupportedException($"¤£¤ä´©ªº¤u¨ãÃş«¬: {instrument.InstrumentType}")
+                _ => throw new NotSupportedException($"æœªçŸ¥å¸‚å ´å·¥å…·é¡å‹: {instrument.InstrumentType}")
             };
 
             curvePoints.Add(point);
         }
 
-        // «Ø¥ß³Ì²×¦±½u
+        // ï¿½Ø¥ß³Ì²×¦ï¿½ï¿½u
         return CreateFinalCurve(curvePoints, interpolationMethod);
     }
 
     /// <summary>
-    /// Bootstrap Deposit¡]ª½±µ­pºâ¡^
+    /// å±•æœŸ Deposit (é–‰å¼ Zero Rate)
     /// </summary>
     private CurvePoint BootstrapDeposit(DepositInstrument deposit)
     {
@@ -82,37 +82,37 @@ public sealed class CurveBootstrapper
     }
 
     /// <summary>
-    /// Bootstrap Swap¡]­¡¥N¨D¸Ñ¡^
+    /// å±•æœŸ Swap (é–‰å¼æŠ˜ç¾å› å­æ¨å°ï¼Œè‹¥å¤±æ•—å‰‡è¿­ä»£)
     /// </summary>
     private CurvePoint BootstrapSwap(SwapInstrument swap, IZeroCurve existingCurve)
     {
         double tenor = swap.Tenor;
 
-        // ¤èªk 1¡Gª½±µ­pºâÁô§t DF¡]Â²¤Æ¡A°²³]¤wª¾©Ò¦³µu´ÁÂI¡^
+        // æ–¹æ³•ä¸€ï¼šé–‰å¼æ¨å°æœ«æœŸ DF
         try
         {
             double impliedDF = swap.CalculateImpliedDiscountFactor(existingCurve);
             
-            // ±q DF ¤Ï±À Zero Rate
+            // æŠ˜ç¾å› å­è½‰æ›æˆ Zero Rate
             var point = CurvePoint.FromDiscountFactor(tenor, impliedDF);
             
             return point;
         }
         catch
         {
-            // ¤èªk 2¡GNewton-Raphson ­¡¥N
+            // æ–¹æ³•äºŒï¼šNewton-Raphson è¿­ä»£
             return BootstrapSwapIterative(swap, existingCurve);
         }
     }
 
     /// <summary>
-    /// ¨Ï¥Î Newton-Raphson ­¡¥N¨D¸Ñ Swap
+    /// ä½¿ç”¨ Newton-Raphson è¿­ä»£å±•æœŸ Swap
     /// </summary>
     private CurvePoint BootstrapSwapIterative(SwapInstrument swap, IZeroCurve existingCurve)
     {
         double tenor = swap.Tenor;
         
-        // ªì©l²q´ú¡G¨Ï¥Î Swap Rate §@¬° Zero Rate
+        // åˆå§‹çŒœæ¸¬ï¼šä½¿ç”¨ Swap Rate ç•¶é›¶åˆ©ç‡
         double zeroRate = swap.MarketQuote;
 
         const int maxIterations = 20;
@@ -120,7 +120,7 @@ public sealed class CurveBootstrapper
 
         for (int iter = 0; iter < maxIterations; iter++)
         {
-            // «Ø¥ß´ú¸Õ¦±½u¡]Â²¤Æ¡G¦b³Ì«á¤@´Á¥[¤W·s¸`ÂI¡^
+            // æš«æ™‚ç·šæ€§æ›²ç·šï¼šåŠ å…¥æœ«ç«¯ç¯€é»
             var testPoints = existingCurve is LinearInterpolatedCurve linCurve
                 ? linCurve.GetPoints().ToList()
                 : new List<CurvePoint>();
@@ -129,7 +129,7 @@ public sealed class CurveBootstrapper
 
             var testCurve = new LinearInterpolatedCurve(_curveName, _referenceDate, testPoints);
 
-            // ­pºâ PV¡]À³¸Ó±µªñ 0¡^
+            // è¨ˆç®—ç¾å€¼ (ç›®æ¨™è¿‘ 0)
             double pv = swap.CalculatePresentValue(testCurve);
 
             if (Math.Abs(pv) < tolerance)
@@ -137,25 +137,25 @@ public sealed class CurveBootstrapper
                 return new CurvePoint(tenor, zeroRate);
             }
 
-            // ­pºâ Jacobian
+            // è¨ˆç®—æ•æ„Ÿåº¦ Jacobian
             double jacobian = swap.CalculateJacobian(testCurve, tenor);
 
             if (Math.Abs(jacobian) < 1e-12)
                 break;
 
-            // Newton-Raphson §ó·s
+            // Newton-Raphson æ›´æ–°
             zeroRate -= pv / jacobian;
 
-            // ­­¨î§ó·s´T«×
+            // é™åˆ¶æ›´æ–°ç¯„åœé¿å…ç™¼æ•£
             zeroRate = Math.Clamp(zeroRate, -0.10, 0.50);
         }
 
-        // ¥¼¦¬ÀÄ¡A¨Ï¥Î³Ì«áªº¦ô­p­È
+        // è¿­ä»£å¤±æ•—ï¼šå›å‚³æœ€å¾Œè¿‘ä¼¼å€¼
         return new CurvePoint(tenor, zeroRate);
     }
 
     /// <summary>
-    /// «Ø¥ß¤¤¶¡¦±½u¡]¥Î©ó­¡¥N¡^
+    /// å»ºç«‹ä¸­é–“éæ¸¡æ›²ç·š (ä¾›å¾ŒçºŒå±•æœŸå¼•ç”¨)
     /// </summary>
     private IZeroCurve CreateIntermediateCurve(
         List<CurvePoint> points,
@@ -163,7 +163,7 @@ public sealed class CurveBootstrapper
     {
         if (points.Count == 0)
         {
-            // ¹w³]¥­©Z¦±½u
+            // ç„¡ç¯€é»ï¼šå›å‚³é è¨­å¹³å¦æ›²ç·š
             return new FlatZeroCurve(_curveName, _referenceDate, 0.01);
         }
 
@@ -182,7 +182,7 @@ public sealed class CurveBootstrapper
     }
 
     /// <summary>
-    /// «Ø¥ß³Ì²×¦±½u
+    /// ä¾æ’å€¼æ–¹æ³•å»ºç«‹æœ€çµ‚æ›²ç·š
     /// </summary>
     private IZeroCurve CreateFinalCurve(
         List<CurvePoint> points,
@@ -199,7 +199,7 @@ public sealed class CurveBootstrapper
     }
 
     /// <summary>
-    /// ÅçÃÒ¤u¨ã¶°¦X
+    /// é©—è­‰å¸‚å ´å·¥å…·é›†åˆ
     /// </summary>
     private void ValidateInstruments(List<MarketInstrument> instruments)
     {
@@ -208,15 +208,15 @@ public sealed class CurveBootstrapper
             var instrument = instruments[i];
 
             if (instrument.StartDate != _referenceDate)
-                throw new ArgumentException($"¤u¨ã {i} °_©l¤é¤£µ¥©ó°ò·Ç¤é");
+                throw new ArgumentException($"å·¥å…· {i} èµ·å§‹æ—¥ä¸ç­‰æ–¼åŸºæº–æ—¥");
 
             if (i > 0 && instrument.Tenor <= instruments[i - 1].Tenor)
-                throw new ArgumentException($"¤u¨ã {i} ´Á­­¤£»¼¼W");
+                throw new ArgumentException($"å·¥å…· {i} Tenor æœªéå¢");
         }
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç¥«³õ¦±½u¡]§Ö³t¤èªk¡^
+    /// å»ºç«‹æ¨™æº–ç¤ºä¾‹æ›²ç·š (ä¾å¸‚å ´å ±åƒ¹)
     /// </summary>
     public static IZeroCurve BuildStandardCurve(
         string curveName,
@@ -232,12 +232,12 @@ public sealed class CurveBootstrapper
 
             if (years <= 1.0)
             {
-                // µu´Á¡G¨Ï¥Î Deposit
+                // çŸ­å¤©æœŸï¼šä½¿ç”¨ Deposit
                 instruments.Add(DepositInstrument.Create(referenceDate, tenor, rate));
             }
             else
             {
-                // ªø´Á¡G¨Ï¥Î Swap
+                // è¼ƒé•·å¤©æœŸï¼šä½¿ç”¨ Swap
                 instruments.Add(SwapInstrument.Create(referenceDate, tenor, rate));
             }
         }
@@ -254,7 +254,7 @@ public sealed class CurveBootstrapper
         {
             'M' => value / 12.0,
             'Y' => value,
-            _ => throw new ArgumentException($"µL®Äªº Tenor: {tenor}")
+            _ => throw new ArgumentException($"æœªçŸ¥ Tenor å–®ä½: {tenor}")
         };
     }
 }

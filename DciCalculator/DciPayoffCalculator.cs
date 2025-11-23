@@ -3,30 +3,32 @@ using DciCalculator.Models;
 namespace DciCalculator;
 
 /// <summary>
-/// DCI ¨ì´Á Payoff ­pºâ¾¹
-/// ­pºâ DCI ²£«~¨ì´Á®Éªº¹ê»Ú¦^³ø¡]¥»ª÷ + §Q®§¡A¥H¤Î¥i¯àªº³f¹ôÂà´«¡^
+/// DCI å ±é…¬è¨ˆç®—å·¥å…·
+/// è¨ˆç®—çµæ§‹å¼å­˜æ¬¾åˆ°æœŸå¾Œçš„æœ€çµ‚è´–å›é‡‘é¡ (Knock-In æœ¬å¹£å…Œæ› æˆ– æœªè§¸ç™¼ä¿ç•™å¤–å¹£æœ¬é‡‘+åˆ©æ¯)
 /// </summary>
 public static class DciPayoffCalculator
 {
     /// <summary>
-    /// ­pºâ DCI ¨ì´Á¦^³øµ²ªG
+    /// è¨ˆç®— DCI æœ€çµ‚è´–å›çµæœ
+    /// Knock-In æ¢ä»¶ï¼šåˆ°æœŸ Spot <= Strike (ä»¥æœ¬å¹£è´–å›)
+    /// æœª Knock-Inï¼šä¿ç•™å¤–å¹£æœ¬é‡‘ + å¤–å¹£åˆ©æ¯
     /// </summary>
-    /// <param name="input">DCI ¿é¤J°Ñ¼Æ</param>
-    /// <param name="quoteResult">DCI ³ø»ùµ²ªG</param>
-    /// <param name="spotAtMaturity">¨ì´Á®Éªº§Y´Á¶×²v</param>
-    /// <returns>¨ì´Á¦^³ø­pºâµ²ªG</returns>
+    /// <param name="input">DCI è¼¸å…¥åƒæ•¸</param>
+    /// <param name="quoteResult">ä¼°åƒ¹çµæœ (åŒ…å«å¤–å¹£åˆ©æ¯)</param>
+    /// <param name="spotAtMaturity">åˆ°æœŸç¾è²¨åŒ¯ç‡</param>
+    /// <returns>æœ€çµ‚è´–å›çµæœçµæ§‹</returns>
     public static DciPayoffResult CalculatePayoff(
         DciInput input,
         DciQuoteResult quoteResult,
         decimal spotAtMaturity)
     {
-        // §PÂ_¬O§_Ä²¤Î¼i¬ù»ù¡]¶×²v¶^¯} Strike¡^
+        // åˆ¤æ–·æ˜¯å¦è§¸åŠ Knock-In éšœç¤™ (Spot <= Strike)
         bool isKnockedIn = spotAtMaturity <= input.Strike;
 
         if (isKnockedIn)
         {
-            // ¶×²v¶^¯}¼i¬ù»ù ¡÷ ³Q­¢Âà´«¦¨¥»¹ô¡]TWD¡^
-            // «È¤á¦¬¨ì¡G(¥»ª÷ + §Q®§) * Strike
+            // å·² Knock-Inï¼šå¤–å¹£æœ¬é‡‘+åˆ©æ¯ ä»¥ Strike å…Œæ›æˆæœ¬å¹£
+            // æœ¬å¹£è´–å›é‡‘é¡ = (å¤–å¹£æœ¬é‡‘ + å¤–å¹£ç¸½åˆ©æ¯) * Strike
             decimal payoffDomestic = 
                 (input.NotionalForeign + quoteResult.TotalInterestForeign) * input.Strike;
 
@@ -40,7 +42,7 @@ public static class DciPayoffCalculator
         }
         else
         {
-            // ¶×²v¥¼¶^¯}¼i¬ù»ù ¡÷ »â¦^¥~¹ô¡]USD¡^+ °ª§Q®§
+            // æœª Knock-Inï¼šè´–å›å¤–å¹£æœ¬é‡‘ + å¤–å¹£ç¸½åˆ©æ¯
             decimal payoffForeign = input.NotionalForeign + quoteResult.TotalInterestForeign;
 
             return new DciPayoffResult(
@@ -54,23 +56,24 @@ public static class DciPayoffCalculator
     }
 
     /// <summary>
-    /// ­pºâ¬ÕÁ«¤ÀªR¡]»P³æ¯Â«ù¦³¥~¹ô©w¦s¬Û¤ñ¡^
+    /// èˆ‡ç´”å¤–å¹£å®šå­˜æ¯”è¼ƒçš„è¶…é¡æç›Š (PnL)
+    /// è‹¥ Knock-In å‰‡éœ€å°‡æœ¬å¹£è´–å›é‡‘é¡æ›ç®—å›å¤–å¹£å†æ¯”è¼ƒ
     /// </summary>
-    /// <param name="input">DCI ¿é¤J°Ñ¼Æ</param>
-    /// <param name="payoffResult">¨ì´Á¦^³øµ²ªG</param>
-    /// <returns>¬ÕÁ«¤ÀªRµ²ªG¡]¥H¥~¹ô­p¡^</returns>
+    /// <param name="input">DCI è¼¸å…¥åƒæ•¸</param>
+    /// <param name="payoffResult">æœ€çµ‚è´–å›çµæœ</param>
+    /// <returns>ç›¸å°å–®ç´”å¤–å¹£å®šå­˜çš„è¶…é¡ PnL (ä»¥å¤–å¹£è¨ˆ)</returns>
     public static decimal CalculatePnLVsDeposit(
         DciInput input,
         DciPayoffResult payoffResult)
     {
-        // ³æ¯Â¥~¹ô©w¦sªº¦^³ø
+        // å¤–å¹£å–®ç´”å®šå­˜çš„åˆ°æœŸé‡‘é¡
         decimal T = (decimal)input.TenorInYears;
         decimal depositOnlyPayoff = 
             input.NotionalForeign * (1m + (decimal)input.DepositRateAnnual * T);
 
         if (payoffResult.IsKnockedIn)
         {
-            // ³QÂà´«¦¨¥»¹ô¡A»İ­n´«ºâ¦^¥~¹ôµ¥­È
+            // Knock-Inï¼šéœ€å°‡æœ¬å¹£è´–å›é‡‘é¡é™¤ä»¥åˆ°æœŸ Spot é‚„åŸæˆå¤–å¹£
             decimal dciPayoffInForeign = 
                 payoffResult.PayoffDomestic / payoffResult.FinalSpot;
             
@@ -78,7 +81,7 @@ public static class DciPayoffCalculator
         }
         else
         {
-            // ª½±µ¦¬¨ì¥~¹ô
+            // æœª Knock-Inï¼šç›´æ¥ä½¿ç”¨å¤–å¹£è´–å›é‡‘é¡
             return payoffResult.PayoffForeign - depositOnlyPayoff;
         }
     }

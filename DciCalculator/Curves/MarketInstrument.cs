@@ -1,64 +1,59 @@
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¥«³õ¤u¨ãÃş«¬
+/// å¸‚å ´å·¥å…·é¡å‹
 /// </summary>
 public enum MarketInstrumentType
 {
     /// <summary>
-    /// ¦s´Ú¡]Deposit¡^
+    /// å­˜æ¬¾ (Deposit)
     /// </summary>
     Deposit,
 
     /// <summary>
-    /// »·´Á§Q²v¨óÄ³¡]Forward Rate Agreement¡^
+    /// é æœŸåˆ©ç‡å”è­° (Forward Rate Agreement)
     /// </summary>
     FRA,
 
     /// <summary>
-    /// §Q²v¥æ´«¡]Interest Rate Swap¡^
+    /// åˆ©ç‡äº¤æ› (Interest Rate Swap)
     /// </summary>
     Swap,
 
     /// <summary>
-    /// ´Á³f¡]Futures¡^
+    /// æœŸè²¨ (Futures)
     /// </summary>
     Futures
 }
 
 /// <summary>
-/// ¥«³õ¤u¨ã©â¶HÃş§O
-/// ¥Î©ó Curve Bootstrapping
-/// 
-/// ¤u¨ã©w¸q¡G
-/// - Maturity¡G¨ì´Á¤é
-/// - Quote¡G¥«³õ³ø»ù
-/// - PV()¡G­pºâ²{­È¡]µ¹©w¦±½u¡^
+/// å¸‚å ´å·¥å…·åŸºåº•é¡åˆ¥ï¼Œä¾›æ›²ç·šå±•æœŸ (Bootstrap) ä½¿ç”¨ã€‚
+/// æˆå“¡ï¼šMaturity åˆ°æœŸæ—¥ï¼›Quote å¸‚å ´å ±åƒ¹ï¼›PV() è¨ˆç®—ç¾å€¼ã€‚
 /// </summary>
 public abstract class MarketInstrument
 {
     /// <summary>
-    /// ¤u¨ãÃş«¬
+    /// å·¥å…·é¡å‹
     /// </summary>
     public MarketInstrumentType InstrumentType { get; }
 
     /// <summary>
-    /// °_©l¤é´Á
+    /// èµ·å§‹æ—¥
     /// </summary>
     public DateTime StartDate { get; }
 
     /// <summary>
-    /// ¨ì´Á¤é
+    /// åˆ°æœŸæ—¥
     /// </summary>
     public DateTime MaturityDate { get; }
 
     /// <summary>
-    /// ¥«³õ³ø»ù¡]¦~¤Æ§Q²v©Î»ù®æ¡^
+    /// å¸‚å ´å ±åƒ¹ (å¹´åŒ–åˆ©ç‡æˆ–å…¶ä»–å€¼)
     /// </summary>
     public double MarketQuote { get; }
 
     /// <summary>
-    /// ´Á­­¡]¦~¡^
+    /// æœŸé™ (å¹´)
     /// </summary>
     public double Tenor => (MaturityDate - StartDate).Days / 365.0;
 
@@ -69,7 +64,7 @@ public abstract class MarketInstrument
         double marketQuote)
     {
         if (maturityDate <= startDate)
-            throw new ArgumentException("¨ì´Á¤é¥²¶·±ß©ó°_©l¤é");
+            throw new ArgumentException("åˆ°æœŸæ—¥å¿…é ˆæ™šæ–¼èµ·å§‹æ—¥");
 
         InstrumentType = instrumentType;
         StartDate = startDate;
@@ -78,29 +73,26 @@ public abstract class MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ¤u¨ãªº²{­È¡]Present Value¡^
-    /// µ¹©w¹s®§¦±½u¡A­pºâ¤u¨ã²z½×»ù­È
+    /// è¨ˆç®—å·¥å…·ç¾å€¼ (Present Value)
     /// </summary>
-    /// <param name="curve">¹s®§§Q²v¦±½u</param>
-    /// <returns>²{­È</returns>
+    /// <param name="curve">é›¶åˆ©ç‡æ›²ç·š</param>
+    /// <returns>ç¾å€¼</returns>
     public abstract double CalculatePresentValue(IZeroCurve curve);
 
     /// <summary>
-    /// ­pºâ¤u¨ã¹ï¹s®§§Q²vªº±Ó·P«×¡]Jacobian¡^
-    /// ¥Î©ó Newton-Raphson ­¡¥N
+    /// è¨ˆç®—ç¾å€¼å°æŒ‡å®š Tenor é›¶åˆ©ç‡æ•æ„Ÿåº¦ (Jacobian)ï¼Œç”¨æ–¼å±•æœŸè¿­ä»£ã€‚
     /// </summary>
-    /// <param name="curve">¹s®§§Q²v¦±½u</param>
-    /// <param name="pillarTenor">¸`ÂI´Á­­</param>
+    /// <param name="curve">é›¶åˆ©ç‡æ›²ç·š</param>
+    /// <param name="pillarTenor">ç¯€é» Tenor</param>
     /// <returns>dPV/dr</returns>
     public virtual double CalculateJacobian(IZeroCurve curve, double pillarTenor)
     {
-        // ¼Æ­È¾É¼Æ¡]Finite Difference¡^
+        // æœ‰é™å·®åˆ† (Finite Difference)
         const double h = 1e-6; // 1bp / 100
 
         double pv0 = CalculatePresentValue(curve);
 
-        // ÂZ°Ê¦±½u¡]Â²¤Æ¡G°²³] Flat Curve¡^
-        // ¹ê°ÈÀ³¸ÓÂZ°Ê¯S©w¸`ÂI
+        // å¹³å¦æ›²ç·šå¾®æ“¾è¿‘ä¼¼ pillar åˆ©ç‡
         double r0 = curve.GetZeroRate(pillarTenor);
         var perturbedCurve = new FlatZeroCurve("Perturbed", curve.ReferenceDate, r0 + h);
 

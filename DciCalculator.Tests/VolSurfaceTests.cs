@@ -5,7 +5,7 @@ using Xunit;
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// ªi°Ê«×¦±­±³æ¤¸´ú¸Õ
+/// æ³¢å‹•ç‡æ›²é¢ç›¸é—œæ¸¬è©¦ï¼šå¹³å¦æ›²é¢ã€æ’å€¼æ›²é¢ã€Smile åƒæ•¸èˆ‡ Delta ä¼°ç®—ã€‚
 /// </summary>
 public class VolSurfaceTests
 {
@@ -60,7 +60,7 @@ public class VolSurfaceTests
     [Fact]
     public void InterpolatedVolSurface_BilinearInterpolation()
     {
-        // Arrange: 2x2 ºô®æ
+        // Arrange: 2x2 ç¶²æ ¼
         var points = new[]
         {
             new VolSurfacePoint(29.0, 0.25, 0.12), // K1, T1
@@ -71,10 +71,10 @@ public class VolSurfaceTests
 
         var surface = new InterpolatedVolSurface("USD/TWD", DateTime.Today, points);
 
-        // Act: ¤¤¤ßÂI´¡­È (K=30.5, T=0.625)
+        // Act: æ’å€¼ä½ç½® (K=30.5, T=0.625)
         double vol = surface.GetVolatility(30.5, 0.625);
 
-        // Assert: À³¸Ó¦b 8% ~ 13% ¤§¶¡
+        // Assert: çµæœä»‹æ–¼ 8% ~ 13%
         Assert.InRange(vol, 0.08, 0.13);
     }
 
@@ -84,12 +84,12 @@ public class VolSurfaceTests
         // Arrange
         var surface = InterpolatedVolSurface.CreateStandardGrid("USD/TWD", atmVol: 0.10);
 
-        // Act: ATM (K=30.5) ¤£¦P´Á­­
+        // Act: ATM (K=30.5) ä¸åŒæœŸé™
         double vol3M = surface.GetATMVolatility(30.5, 0.25);
         double vol6M = surface.GetATMVolatility(30.5, 0.50);
         double vol1Y = surface.GetATMVolatility(30.5, 1.00);
 
-        // Assert: ´Á­­¶Vªø¡Aªi°Ê«×¶V°ª¡]Term Structure¡^
+        // Assert: æœŸé™çµæ§‹ï¼šè¼ƒé•·æœŸé™æ³¢å‹•ç‡ä¸ä½æ–¼è¼ƒçŸ­æœŸé™
         Assert.True(vol6M >= vol3M);
         Assert.True(vol1Y >= vol6M);
     }
@@ -117,9 +117,9 @@ public class VolSurfaceTests
         var surface = InterpolatedVolSurface.CreateStandardGrid("USD/TWD", 0.10);
 
         // Act & Assert
-        Assert.True(surface.IsInRange(30.5, 0.50));   // ½d³ò¤º
-        Assert.False(surface.IsInRange(28.0, 0.50));  // Strike ¹L§C
-        Assert.False(surface.IsInRange(30.5, 2.00));  // Tenor ¹Lªø
+        Assert.True(surface.IsInRange(30.5, 0.50));   // æœ‰æ•ˆ
+        Assert.False(surface.IsInRange(28.0, 0.50));  // Strike è¶…å‡ºç¯„åœ
+        Assert.False(surface.IsInRange(30.5, 2.00));  // Tenor è¶…å‡ºç¯„åœ
     }
 
     [Fact]
@@ -140,16 +140,16 @@ public class VolSurfaceTests
 
         // Act
         double volDelta50 = smile.EstimateVolByDelta(0.50);  // ATM
-        double volDelta25C = smile.EstimateVolByDelta(0.25); // 25D Call (§ó»·)
+        double volDelta25C = smile.EstimateVolByDelta(0.25); // 25D Call
         double volDeltaNeg25P = smile.EstimateVolByDelta(-0.25); // 25D Put
 
         // Assert
         Assert.Equal(0.10, volDelta50, precision: 2); // ATM
         
-        // 25D Call À³¸Ó§C©ó ATM¡]¦]¬° RR > 0¡APut ºİ°ª¡^
+        // 25D Call é æœŸä½æ–¼ ATMï¼›RR>0 æ™‚ Put æœƒè¼ƒé«˜
         Assert.InRange(volDelta25C, 0.08, 0.11);
         
-        // 25D Put À³¸Ó°ª©ó ATM
+        // 25D Put é æœŸé«˜æ–¼ ATM
         Assert.InRange(volDeltaNeg25P, 0.10, 0.13);
     }
 }

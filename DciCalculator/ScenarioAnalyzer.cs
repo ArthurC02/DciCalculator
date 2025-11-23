@@ -3,23 +3,23 @@ using DciCalculator.Models;
 namespace DciCalculator;
 
 /// <summary>
-/// ±¡¹Ò¤ÀªR¾¹
-/// À£¤O´ú¸Õ¡Gµû¦ô Spot¡BVol ÅÜ¤Æ¹ï DCI ³ø»ùªº¼vÅT
+/// æƒ…å¢ƒåˆ†æå™¨ã€‚
+/// ç”¨é€”ï¼šæ¸¬è©¦ Spot èˆ‡ Vol è®Šå‹•å° DCI å ±åƒ¹èˆ‡åˆ©æ¯çš„å½±éŸ¿ã€‚
 /// 
-/// ¥Î³~¡G
-/// - ­·ÀIºŞ²z¡G¤F¸Ñ¥«³õÅÜ°Ê¹ï³ø»ùªº¼vÅT
-/// - ¹ï¨R¨Mµ¦¡G­pºâ»İ­nªº Delta ¹ï¨R¶q
-/// - «È¤á®i¥Ü¡G®i¥Ü¤£¦P¥«³õ±¡¹Ò¤Uªº¦¬¯q
+/// æ‡‰ç”¨ï¼š
+/// - äº¤æ˜“ç®¡ç†ï¼šè©•ä¼°ä¸åŒè®Šå‹•å¹…åº¦çš„å½±éŸ¿
+/// - é¢¨éšªç›£æ§ï¼šè¿‘ä¼¼ä¼°ç®— Deltaã€Vega æ•æ„Ÿåº¦
+/// - å®¢æˆ¶æºé€šï¼šå±•ç¤ºå¤šç¨®å¸‚å ´æƒ…å¢ƒä¸‹ Coupon èˆ‡åˆ©æ¯çš„è®ŠåŒ–
 /// </summary>
 public static class ScenarioAnalyzer
 {
     /// <summary>
-    /// °õ¦æ±¡¹Ò¤ÀªR
+    /// åŸ·è¡Œæƒ…å¢ƒåˆ†æã€‚
     /// </summary>
-    /// <param name="baseInput">°ò·Ç DCI ¿é¤J</param>
-    /// <param name="spotShifts">Spot ÅÜ°Ê¡]pips¡^</param>
-    /// <param name="volShifts">Vol ÅÜ°Ê¡]µ´¹ï­È¡A¨Ò¦p ¡Ó0.02¡^</param>
-    /// <returns>©Ò¦³±¡¹Òªºµ²ªG</returns>
+    /// <param name="baseInput">åŸºæº– DCI è¼¸å…¥</param>
+    /// <param name="spotShifts">Spot ç§»å‹•åˆ—è¡¨ï¼ˆpipsï¼‰</param>
+    /// <param name="volShifts">Vol è®Šå‹•åˆ—è¡¨ï¼ˆçµ•å°é‡ï¼Œä¾‹å¦‚ Â±0.02ï¼‰</param>
+    /// <returns>å…¨éƒ¨æƒ…å¢ƒçµæœåˆ—è¡¨</returns>
     public static IReadOnlyList<ScenarioResult> Analyze(
         DciInput baseInput,
         IEnumerable<decimal> spotShifts,
@@ -31,7 +31,7 @@ public static class ScenarioAnalyzer
 
         var results = new List<ScenarioResult>();
 
-        // ­pºâ°ò·Ç­È
+        // è¨ˆç®—åŸºæº–å ±åƒ¹
         var baseQuote = DciPricer.Quote(baseInput);
         decimal baseSpotMid = baseInput.SpotQuote.Mid;
         double baseVol = baseInput.Volatility;
@@ -40,31 +40,31 @@ public static class ScenarioAnalyzer
         {
             foreach (double volShift in volShifts)
             {
-                // ½Õ¾ã Spot
+                // èª¿æ•´ Spotï¼ˆpips è½‰æ›æˆåŒ¯ç‡ï¼‰
                 decimal newSpotMid = baseSpotMid + spotShift * 0.01m; // pips to rate
                 var newSpotQuote = new FxQuote(
                     Bid: newSpotMid - 0.01m,
                     Ask: newSpotMid + 0.01m
                 );
 
-                // ½Õ¾ã Vol
+                // èª¿æ•´ Volï¼ˆé¿å…ä½æ–¼æœ€å°å€¼ï¼‰
                 double newVol = Math.Max(0.01, baseVol + volShift);
 
-                // «Ø¥ß·s±¡¹Ò¿é¤J
+                // å»ºç«‹æ–°çš„æƒ…å¢ƒè¼¸å…¥
                 var scenarioInput = baseInput with
                 {
                     SpotQuote = newSpotQuote,
                     Volatility = newVol
                 };
 
-                // ­pºâ³ø»ù
+                // è¨ˆç®—æƒ…å¢ƒå ±åƒ¹
                 var scenarioQuote = DciPricer.Quote(scenarioInput);
 
-                // ­pºâÅÜ¤Æ
+                // è¨ˆç®— Coupon / åˆ©æ¯è®ŠåŒ–
                 double couponChange = scenarioQuote.CouponAnnual - baseQuote.CouponAnnual;
                 decimal interestChange = scenarioQuote.TotalInterestForeign - baseQuote.TotalInterestForeign;
 
-                // °O¿ıµ²ªG
+                // ç´¯ç©çµæœ
                 results.Add(new ScenarioResult(
                     SpotShift: spotShift,
                     VolShift: volShift,
@@ -82,9 +82,9 @@ public static class ScenarioAnalyzer
     }
 
     /// <summary>
-    /// §Ö³t±¡¹Ò¤ÀªR¡]¹w³]³]©w¡^
-    /// Spot: ¡Ó10, ¡Ó5, 0 pips
-    /// Vol: ¡Ó2%, 0
+    /// å¿«é€Ÿé è¨­æƒ…å¢ƒåˆ†æï¼ˆå…§å»ºçµ„åˆï¼‰ã€‚
+    /// Spot: -10, -5, 0, +5, +10 pips
+    /// Vol: -2%, 0%, +2%
     /// </summary>
     public static IReadOnlyList<ScenarioResult> QuickAnalyze(DciInput baseInput)
     {
@@ -95,17 +95,17 @@ public static class ScenarioAnalyzer
     }
 
     /// <summary>
-    /// ­pºâ±Ó·P«×¡]³æ¤@ÅÜ¼Æ¡^
+    /// è¨ˆç®—æ•æ„Ÿåº¦ï¼ˆå–®ä¸€æ­¥é•·è¿‘ä¼¼ï¼‰ã€‚
     /// </summary>
     public static (double SpotDelta, double VolVega) CalculateSensitivities(DciInput baseInput)
     {
         ArgumentNullException.ThrowIfNull(baseInput);
 
-        // ­pºâ°ò·Ç
+        // è¨ˆç®—åŸºæº–å ±åƒ¹
         var baseQuote = DciPricer.Quote(baseInput);
         double baseCoupon = baseQuote.CouponAnnual;
 
-        // Spot ±Ó·P«×¡]Delta¡^
+        // Spot æ•æ„Ÿåº¦ï¼ˆDeltaï¼‰
         decimal spotBump = 1m; // 1 pip
         decimal spotMid = baseInput.SpotQuote.Mid;
         var spotUpInput = baseInput with
@@ -118,7 +118,7 @@ public static class ScenarioAnalyzer
         var spotUpQuote = DciPricer.Quote(spotUpInput);
         double spotDelta = (spotUpQuote.CouponAnnual - baseCoupon) / (double)spotBump;
 
-        // Vol ±Ó·P«×¡]Vega¡^
+        // Vol æ•æ„Ÿåº¦ï¼ˆVegaï¼‰
         double volBump = 0.01; // 1%
         var volUpInput = baseInput with { Volatility = baseInput.Volatility + volBump };
         var volUpQuote = DciPricer.Quote(volUpInput);
@@ -128,8 +128,8 @@ public static class ScenarioAnalyzer
     }
 
     /// <summary>
-    /// ­pºâ¬ÕÁ«¤À§G¡]Monte Carlo Â²¤Æª©¡^
-    /// °²³] Spot ¦b¨ì´Á®Éªº¤À§G
+    /// è¨ˆç®—åˆ°æœŸ PnL åˆ†ä½ˆï¼ˆMonte Carlo æ¨¡æ“¬ï¼‰ã€‚
+    /// å‡è¨­ Spot æœŸé–“æœå¾å¹¾ä½•å¸ƒæœ—é‹å‹• (GBM)ã€‚
     /// </summary>
     public static PnLDistribution CalculatePnLDistribution(
         DciInput baseInput,
@@ -145,30 +145,30 @@ public static class ScenarioAnalyzer
         double timeToMaturity = baseInput.TenorInYears;
 
         var pnls = new List<decimal>(scenarios);
-        var random = new Random(42); // ©T©wºØ¤l¡A¥i­«²{
+        var random = new Random(42); // å›ºå®šç¨®å­ä»¥åˆ©é‡ç¾
 
         for (int i = 0; i < scenarios; i++)
         {
-            // ²£¥ÍÀH¾÷ Spot¡]¹ï¼Æ±`ºA¤À§G¡^
+            // æ¨¡æ“¬ Spot çµ‚å€¼ï¼ˆGBM å°¾ç«¯ï¼‰
             double z = GenerateNormalRandom(random);
             double spotAtMaturity = (double)spotMid * Math.Exp(
                 (drift - 0.5 * spotVolatility * spotVolatility) * timeToMaturity +
                 spotVolatility * Math.Sqrt(timeToMaturity) * z
             );
 
-            // ­pºâ Payoff
+            // è¨ˆç®— Payoff
             var payoff = DciPayoffCalculator.CalculatePayoff(
                 baseInput,
                 baseQuote,
                 (decimal)spotAtMaturity
             );
 
-            // ­pºâ PnL¡]»P³æ¯Â©w¦s¬Û¤ñ¡^
+            // è¨ˆç®—ç›¸å°å­˜æ¬¾çš„ PnL
             decimal pnl = DciPayoffCalculator.CalculatePnLVsDeposit(baseInput, payoff);
             pnls.Add(pnl);
         }
 
-        // ²Î­p
+        // çµ±è¨ˆåˆ†ä½ˆçµæœ
         pnls.Sort();
         decimal mean = pnls.Average();
         decimal median = pnls[scenarios / 2];
@@ -187,7 +187,7 @@ public static class ScenarioAnalyzer
     }
 
     /// <summary>
-    /// ²£¥Í¼Ğ·Ç±`ºAÀH¾÷¼Æ¡]Box-Muller ¤èªk¡^
+    /// ç”¢ç”Ÿæ¨™æº–å¸¸æ…‹äº‚æ•¸ï¼ˆBox-Mullerï¼‰ã€‚
     /// </summary>
     private static double GenerateNormalRandom(Random random)
     {
@@ -197,19 +197,19 @@ public static class ScenarioAnalyzer
     }
 
     /// <summary>
-    /// ²£¥Í±¡¹Ò¤ÀªR³ø§i¡]®æ¦¡¤Æ¿é¥X¡^
+    /// ç”¢ç”Ÿæƒ…å¢ƒåˆ†æå ±å‘Šï¼ˆæ–‡å­—æ ¼å¼ï¼‰ã€‚
     /// </summary>
     public static string GenerateReport(IReadOnlyList<ScenarioResult> results)
     {
         ArgumentNullException.ThrowIfNull(results);
 
         if (results.Count == 0)
-            return "µL±¡¹Òµ²ªG";
+            return "ç„¡æƒ…å¢ƒçµæœ";
 
         var report = new System.Text.StringBuilder();
-        report.AppendLine("=== DCI ±¡¹Ò¤ÀªR³ø§i ===");
+        report.AppendLine("=== DCI æƒ…å¢ƒåˆ†æå ±å‘Š ===");
         report.AppendLine();
-        report.AppendLine($"{"Spot Shift",12} | {"Vol Shift",10} | {"Coupon",8} | {"Coupon £G",10} | {"Interest £G",12}");
+        report.AppendLine($"{"Spot Shift",12} | {"Vol Shift",10} | {"Coupon",8} | {"CouponÎ”",10} | {"InterestÎ”",12}");
         report.AppendLine(new string('-', 70));
 
         foreach (var result in results)
@@ -228,28 +228,28 @@ public static class ScenarioAnalyzer
 }
 
 /// <summary>
-/// ±¡¹Ò¤ÀªRµ²ªG
+/// æƒ…å¢ƒåˆ†æçµæœã€‚
 /// </summary>
 public sealed record ScenarioResult(
-    decimal SpotShift,          // Spot ÅÜ°Ê¡]pips¡^
-    double VolShift,            // Vol ÅÜ°Ê¡]µ´¹ï­È¡^
-    decimal Spot,               // ·s Spot
-    double Volatility,          // ·s Vol
-    double Coupon,              // ·s Coupon
-    double CouponChange,        // Coupon ÅÜ¤Æ¡]vs. °ò·Ç¡^
-    decimal TotalInterest,      // Á`§Q®§
-    decimal InterestChange      // §Q®§ÅÜ¤Æ¡]vs. °ò·Ç¡^
+    decimal SpotShift,          // Spot ç§»å‹•ï¼ˆpipsï¼‰
+    double VolShift,            // Vol è®Šå‹•ï¼ˆçµ•å°ï¼‰
+    decimal Spot,               // æ–° Spot
+    double Volatility,          // æ–° Vol
+    double Coupon,              // æ–° Coupon
+    double CouponChange,        // Coupon è®ŠåŒ–ï¼ˆvs. åŸºæº–ï¼‰
+    decimal TotalInterest,      // ç¸½åˆ©æ¯ï¼ˆå¤–å¹£ï¼‰
+    decimal InterestChange      // åˆ©æ¯è®ŠåŒ–ï¼ˆvs. åŸºæº–ï¼‰
 );
 
 /// <summary>
-/// ¬ÕÁ«¤À§G²Î­p
+/// PnL åˆ†ä½ˆçµ±è¨ˆã€‚
 /// </summary>
 public sealed record PnLDistribution(
-    int Scenarios,              // ±¡¹Ò¼Æ¶q
-    decimal Mean,               // ¥­§¡ PnL
-    decimal Median,             // ¤¤¦ì¼Æ PnL
-    decimal Percentile5,        // 5% ¤À¦ì¼Æ¡]VaR 95%¡^
-    decimal Percentile95,       // 95% ¤À¦ì¼Æ
-    decimal Min,                // ³Ì¤p PnL
-    decimal Max                 // ³Ì¤j PnL
+    int Scenarios,              // æ¨¡æ“¬æ¬¡æ•¸
+    decimal Mean,               // å¹³å‡ PnL
+    decimal Median,             // ä¸­ä½æ•¸ PnL
+    decimal Percentile5,        // 5% åˆ†ä½ï¼ˆVaR 95%ï¼‰
+    decimal Percentile95,       // 95% åˆ†ä½
+    decimal Min,                // æœ€å° PnL
+    decimal Max                 // æœ€å¤§ PnL
 );

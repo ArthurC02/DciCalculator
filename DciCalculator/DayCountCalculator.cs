@@ -3,63 +3,62 @@ using System.Runtime.CompilerServices;
 namespace DciCalculator;
 
 /// <summary>
-/// Day Count Convention¡]¤é´Á­pºâºD¨Ò¡^
-/// ­pºâ¨â¤é´Á¶¡ªº¦~¤Æ´Á¶¡
+/// Day Count Convention (æ—¥æ•¸è¨ˆç®—æ…£ä¾‹)
+/// ç”¨æ–¼å°‡å¯¦éš›å¤©æ•¸æ›ç®—æˆå¹´æœŸæ¯”ä¾‹ (Year Fraction)
 /// </summary>
 public enum DayCountConvention
 {
     /// <summary>
-    /// Actual/365¡G¹ê»Ú¤Ñ¼Æ / 365
-    /// ±`¥Î©ó¡GGBP¡B³¡¤À FX ¥«³õ
+    /// Actual/365 : å¯¦éš›å¤©æ•¸ / 365
+    /// å¸¸è¦‹ç”¨é€”ï¼šGBPã€éƒ¨åˆ† FX ç”¢å“
     /// </summary>
     Act365,
 
     /// <summary>
-    /// Actual/360¡G¹ê»Ú¤Ñ¼Æ / 360
-    /// ±`¥Î©ó¡GUSD¡BEUR Money Market
+    /// Actual/360 : å¯¦éš›å¤©æ•¸ / 360
+    /// å¸¸è¦‹ç”¨é€”ï¼šUSDã€EUR è²¨å¹£å¸‚å ´
     /// </summary>
     Act360,
 
     /// <summary>
-    /// Actual/Actual¡G¹ê»Ú¤Ñ¼Æ / ¹ê»Ú¦~¤Ñ¼Æ
-    /// ¦Ò¼{¶|¦~
-    /// ±`¥Î©ó¡G¶Å¨é¥«³õ
+    /// Actual/Actual : å¯¦éš›å¤©æ•¸ / è©²å¹´å¤©æ•¸ (è€ƒæ…®é–å¹´)
+    /// å¸¸è¦‹ç”¨é€”ï¼šæ”¿åºœå‚µåˆ¸
     /// </summary>
     ActAct,
 
     /// <summary>
-    /// 30/360¡G¨C¤ë 30 ¤Ñ¡A¨C¦~ 360 ¤Ñ
-    /// ±`¥Î©ó¡G¤½¥q¶Å¡B³¡¤À­l¥Í«~
+    /// 30/360 : æ¯æœˆçµ±ä¸€è¦–ç‚º 30 å¤©ã€æ¯å¹´ 360 å¤©
+    /// å¸¸è¦‹ç”¨é€”ï¼šå…¬å¸å‚µã€éƒ¨ä»½çµæ§‹ç¥¨æ“š
     /// </summary>
     Thirty360,
 
     /// <summary>
-    /// Business/252¡G¤u§@¤é / 252
-    /// ±`¥Î©ó¡G¬Y¨Ç¨È¬w¥«³õ
+    /// Business/252 : å·¥ä½œå¤© / 252 (å¹´åº¦å‡è¨­å·¥ä½œå¤©æ•¸)
+    /// å¸¸è¦‹ç”¨é€”ï¼šå·´è¥¿ç­‰å¸‚å ´è¡ç”Ÿå“
     /// </summary>
     Bus252
 }
 
 /// <summary>
-/// Day Count ­pºâ¾¹
-/// ºë½T­pºâ¨â¤é´Á¶¡ªº¦~¤Æ´Á¶¡
+/// Day Count è¨ˆç®—å·¥å…·
+/// æä¾›å¹´æœŸæ¯”ä¾‹ã€åˆ°æœŸæ—¥ã€Tenor è§£æèˆ‡å·¥ä½œå¤©ç›¸é—œé‹ç®—
 /// </summary>
 public static class DayCountCalculator
 {
     /// <summary>
-    /// ­pºâ¦~¤Æ´Á¶¡¡]Year Fraction¡^
+    /// è¨ˆç®—å¹´æœŸæ¯”ä¾‹ (Year Fraction)
     /// </summary>
-    /// <param name="startDate">°_©l¤é</param>
-    /// <param name="endDate">µ²§ô¤é</param>
-    /// <param name="convention">Day Count ºD¨Ò</param>
-    /// <returns>¦~¤Æ´Á¶¡</returns>
+    /// <param name="startDate">èµ·å§‹æ—¥æœŸ</param>
+    /// <param name="endDate">çµæŸæ—¥æœŸ</param>
+    /// <param name="convention">æ—¥æ•¸è¨ˆç®—æ…£ä¾‹</param>
+    /// <returns>å¹´æœŸæ¯”ä¾‹ (ä»¥å¹´ç‚ºå–®ä½)</returns>
     public static double YearFraction(
         DateTime startDate,
         DateTime endDate,
         DayCountConvention convention = DayCountConvention.Act365)
     {
         if (endDate < startDate)
-            throw new ArgumentException("µ²§ô¤é¥²¶· >= °_©l¤é");
+            throw new ArgumentException("çµæŸæ—¥æœŸå¿…é ˆ >= èµ·å§‹æ—¥æœŸ");
 
         return convention switch
         {
@@ -73,7 +72,7 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// Actual/365¡G¹ê»Ú¤Ñ¼Æ / 365
+    /// Actual/365 è¨ˆç®—é‚è¼¯
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double CalculateAct365(DateTime startDate, DateTime endDate)
@@ -83,7 +82,7 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// Actual/360¡G¹ê»Ú¤Ñ¼Æ / 360
+    /// Actual/360 è¨ˆç®—é‚è¼¯
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double CalculateAct360(DateTime startDate, DateTime endDate)
@@ -93,21 +92,21 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// Actual/Actual¡G¦Ò¼{¶|¦~
+    /// Actual/Actual è¨ˆç®— (è€ƒæ…®é–å¹´)
     /// </summary>
     private static double CalculateActAct(DateTime startDate, DateTime endDate)
     {
         int actualDays = (endDate - startDate).Days;
         
-        // Â²¤Æª©¡G¨Ï¥Î°_©l¦~ªº¤Ñ¼Æ
-        // §¹¾ãª©»İ­n³v¦~­pºâ
+        // é‚è¼¯ï¼šä½¿ç”¨èµ·å§‹å¹´ä¹‹å¤©æ•¸ (Leap Year 366, å¦å‰‡ 365)
+        // è‹¥è·¨å¹´äº¦å¯æ”¹é€²ç‚ºåŠ ç¸½å„å¹´åº¦å¤©æ•¸ (æ­¤è™•ç°¡åŒ–)
         int daysInYear = DateTime.IsLeapYear(startDate.Year) ? 366 : 365;
         
         return actualDays / (double)daysInYear;
     }
 
     /// <summary>
-    /// 30/360¡G¨C¤ë 30 ¤Ñ
+    /// 30/360 è¨ˆç®— (æ¯æœˆå›ºå®š 30 å¤©)
     /// </summary>
     private static double CalculateThirty360(DateTime startDate, DateTime endDate)
     {
@@ -126,7 +125,7 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// Business/252¡G¤u§@¤é­pºâ¡]Â²¤Æª©¡A¥¼¦Ò¼{°²¤é¡^
+    /// Business/252 è¨ˆç®— (åƒ…è¨ˆç®—å·¥ä½œå¤©)
     /// </summary>
     private static double CalculateBus252(DateTime startDate, DateTime endDate)
     {
@@ -135,8 +134,7 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// ­pºâ¤u§@¤é¼Æ¡]¶g¤@¦Ü¶g¤­¡A¤£§t°²¤é¡^
-    /// Â²¤Æª©¡G¶È±Æ°£¶g¥½
+    /// è¨ˆç®—å·¥ä½œå¤© (ç•¥éé€±å…­ã€é€±æ—¥ï¼Œä¸å«å‡æ—¥)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int CountBusinessDays(DateTime startDate, DateTime endDate)
@@ -158,12 +156,12 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// ­pºâ¨ì´Á¤é¡]®Ú¾Ú Tenor¡^
+    /// è¨ˆç®—åˆ°æœŸæ—¥ (ä¾æ“šå¤©æ•¸ Tenor)
     /// </summary>
-    /// <param name="startDate">°_©l¤é</param>
-    /// <param name="tenorInDays">´Á­­¡]¤Ñ¼Æ¡^</param>
-    /// <param name="adjustForWeekends">¬O§_½Õ¾ã¦Ü¤u§@¤é</param>
-    /// <returns>¨ì´Á¤é</returns>
+    /// <param name="startDate">èµ·å§‹æ—¥æœŸ</param>
+    /// <param name="tenorInDays">å¤©æ•¸ Tenor</param>
+    /// <param name="adjustForWeekends">æ˜¯å¦èª¿æ•´è‡³å·¥ä½œå¤© (Following)</param>
+    /// <returns>åˆ°æœŸæ—¥æœŸ</returns>
     public static DateTime CalculateMaturityDate(
         DateTime startDate,
         int tenorInDays,
@@ -175,7 +173,7 @@ public static class DayCountCalculator
 
         if (adjustForWeekends)
         {
-            // Following Business Day Convention
+            // Following Business Day Conventionï¼šé‡é€±æœ«å¾€å¾Œéå»¶
             while (maturityDate.DayOfWeek == DayOfWeek.Saturday ||
                    maturityDate.DayOfWeek == DayOfWeek.Sunday)
             {
@@ -187,11 +185,11 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// ¸ÑªR Tenor ¦r¦ê¡]¨Ò¦p "3M", "90D", "1Y"¡^
+    /// è§£æ Tenor å­—ä¸² (ä¾‹å¦‚ "3M", "90D", "1Y")
     /// </summary>
-    /// <param name="tenorString">Tenor ¦r¦ê</param>
-    /// <param name="referenceDate">°Ñ¦Ò¤é´Á</param>
-    /// <returns>(´Á­­¤Ñ¼Æ, ¦~¤Æ´Á¶¡)</returns>
+    /// <param name="tenorString">Tenor å­—ä¸²</param>
+    /// <param name="referenceDate">åƒè€ƒæ—¥æœŸ (èµ·å§‹)</param>
+    /// <returns>(å¤©æ•¸, å¹´æœŸæ¯”ä¾‹)</returns>
     public static (int Days, double YearFraction) ParseTenor(
         string tenorString,
         DateTime referenceDate)
@@ -201,11 +199,11 @@ public static class DayCountCalculator
         tenorString = tenorString.Trim().ToUpperInvariant();
 
         if (tenorString.Length < 2)
-            throw new ArgumentException($"µL®Äªº Tenor ®æ¦¡: {tenorString}");
+            throw new ArgumentException($"ç„¡æ•ˆçš„ Tenor æ ¼å¼: {tenorString}");
 
         char unit = tenorString[^1];
         if (!int.TryParse(tenorString[..^1], out int value))
-            throw new ArgumentException($"µLªk¸ÑªR¼Æ¦r: {tenorString}");
+            throw new ArgumentException($"ç„¡æ³•è§£ææ•¸å€¼: {tenorString}");
 
         int days = unit switch
         {
@@ -213,7 +211,7 @@ public static class DayCountCalculator
             'W' => value * 7,                       // Weeks
             'M' => ApproximateMonthsToDays(value),  // Months
             'Y' => value * 365,                     // Years
-            _ => throw new ArgumentException($"¥¼ª¾ªº³æ¦ì: {unit}")
+            _ => throw new ArgumentException($"æœªçŸ¥å–®ä½: {unit}")
         };
 
         DateTime maturityDate = CalculateMaturityDate(referenceDate, days);
@@ -223,17 +221,17 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// ªñ¦ü¤ë¥÷Âà¤Ñ¼Æ¡]Â²¤Æª©¡^
+    /// æœˆä»½è¿‘ä¼¼æ›ç®—å¤©æ•¸ (æ¯æœˆ 30 å¤©ç°¡åŒ–)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ApproximateMonthsToDays(int months)
     {
-        // Â²¤Æ¡G¨C¤ë 30 ¤Ñ
+        // å‡è¨­ï¼šæ¯æœˆ 30 å¤©
         return months * 30;
     }
 
     /// <summary>
-    /// ÀË¬d¬O§_¬°¤u§@¤é
+    /// æ˜¯å¦ç‚ºå·¥ä½œæ—¥ (éé€±å…­ã€é€±æ—¥)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBusinessDay(DateTime date)
@@ -243,7 +241,7 @@ public static class DayCountCalculator
     }
 
     /// <summary>
-    /// ½Õ¾ã¦Ü¤U¤@­Ó¤u§@¤é
+    /// èª¿æ•´è‡³ä¸‹ä¸€å€‹å·¥ä½œæ—¥ (Following)
     /// </summary>
     public static DateTime AdjustToBusinessDay(
         DateTime date,
@@ -269,7 +267,7 @@ public static class DayCountCalculator
     {
         DateTime adjusted = AdjustFollowing(date);
         
-        // ­Y½Õ¾ã«á¸ó¤ë¡A§ï¥Î Preceding
+        // è‹¥è·¨æœˆå‰‡æ”¹ç‚ºä½¿ç”¨ Preceding è¦å‰‡
         if (adjusted.Month != date.Month)
             return AdjustPreceding(date);
         
@@ -285,27 +283,27 @@ public static class DayCountCalculator
 }
 
 /// <summary>
-/// Business Day Convention¡]¤u§@¤é½Õ¾ãºD¨Ò¡^
+/// Business Day Convention (å·¥ä½œæ—¥èª¿æ•´è¦å‰‡)
 /// </summary>
 public enum BusinessDayConvention
 {
     /// <summary>
-    /// Following¡G½Õ¾ã¦Ü¤U¤@­Ó¤u§@¤é
+    /// Followingï¼šé‡é€±æœ«/å‡æ—¥å¾€å¾Œèª¿æ•´
     /// </summary>
     Following,
 
     /// <summary>
-    /// Modified Following¡G½Õ¾ã¦Ü¤U¤@­Ó¤u§@¤é¡A¦ı¤£¸ó¤ë
+    /// Modified Followingï¼šè‹¥è·¨æœˆå‰‡æ”¹å‘å‰ (Preceding)
     /// </summary>
     ModifiedFollowing,
 
     /// <summary>
-    /// Preceding¡G½Õ¾ã¦Ü«e¤@­Ó¤u§@¤é
+    /// Precedingï¼šé‡é€±æœ«å¾€å‰èª¿æ•´
     /// </summary>
     Preceding,
 
     /// <summary>
-    /// ¤£½Õ¾ã
+    /// Noneï¼šä¸èª¿æ•´
     /// </summary>
     None
 }

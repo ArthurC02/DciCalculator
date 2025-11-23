@@ -4,12 +4,10 @@ using DciCalculator.Models;
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ½u©Ê´¡­È¹s®§¦±½u
-/// ¦b¸`ÂI¶¡¨Ï¥Î½u©Ê´¡­È­pºâ§Q²v
+/// ç·šæ€§æ’å€¼é›¶åˆ©ç‡æ›²ç·š
+/// æ–¼ç¯€é»é–“ä»¥ç·šæ€§æ–¹å¼ä¼°ç®—ä¸­é–“æœŸé™é›¶åˆ©ç‡ã€‚
 /// 
-/// ´¡­È¤èªk¡G
-/// r(t) = r1 + (r2 - r1) * (t - t1) / (t2 - t1)
-/// ¨ä¤¤ t1 ? t ? t2
+/// å…¬å¼ï¼šr(t) = r1 + (r2 - r1) * (t - t1) / (t2 - t1), t1 â‰¤ t â‰¤ t2
 /// </summary>
 public sealed class LinearInterpolatedCurve : IZeroCurve
 {
@@ -19,11 +17,11 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     public DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// «Ø¥ß½u©Ê´¡­È¦±½u
+    /// å»ºç«‹ç·šæ€§æ’å€¼æ›²ç·š
     /// </summary>
-    /// <param name="curveName">¦±½u¦WºÙ</param>
-    /// <param name="referenceDate">°ò·Ç¤é´Á</param>
-    /// <param name="points">¦±½u¸`ÂI¡]¥²¶·«ö Tenor ±Æ§Ç¡^</param>
+    /// <param name="curveName">æ›²ç·šåç¨±</param>
+    /// <param name="referenceDate">åŸºæº–æ—¥</param>
+    /// <param name="points">ç¯€é»é›†åˆ (Tenor / ZeroRate)</param>
     public LinearInterpolatedCurve(
         string curveName,
         DateTime referenceDate,
@@ -35,21 +33,21 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
         CurveName = curveName;
         ReferenceDate = referenceDate;
 
-        // ±Æ§Ç¨ÃÅçÃÒ¸`ÂI
+        // ç¯€é»æ’åº
         _points = points.OrderBy(p => p.Tenor).ToArray();
 
         if (_points.Length < 2)
-            throw new ArgumentException("¦Ü¤Ö»İ­n 2 ­Ó¦±½u¸`ÂI", nameof(points));
+            throw new ArgumentException("è‡³å°‘éœ€è¦ 2 å€‹ç¯€é»", nameof(points));
 
-        // ÅçÃÒ©Ò¦³¸`ÂI
+        // é©—è­‰ç¯€é»
         for (int i = 0; i < _points.Length; i++)
         {
             if (!_points[i].IsValid())
-                throw new ArgumentException($"¸`ÂI {i} µL®Ä: {_points[i]}");
+                throw new ArgumentException($"ç¯€é» {i} ç„¡æ•ˆ: {_points[i]}");
 
-            // ÀË¬d¬O§_¦³­«½Æ Tenor
+            // æª¢æŸ¥ Tenor é‡è¤‡
             if (i > 0 && Math.Abs(_points[i].Tenor - _points[i - 1].Tenor) < 1e-10)
-                throw new ArgumentException($"Tenor ­«½Æ: {_points[i].Tenor}");
+                throw new ArgumentException($"Tenor é‡è¤‡: {_points[i].Tenor}");
         }
     }
 
@@ -58,17 +56,17 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     {
         ArgumentOutOfRangeException.ThrowIfNegative(timeInYears);
 
-        // Ãä¬É±¡ªp
+        // å·¦å´å¤–æ¨ï¼šä½¿ç”¨é¦–ç¯€é»åˆ©ç‡
         if (timeInYears <= _points[0].Tenor)
-            return _points[0].ZeroRate; // ¥~±À¡]¨Ï¥Î²Ä¤@­Ó¸`ÂI¡^
+            return _points[0].ZeroRate; // å·¦å´ç•Œå¤–ç›´æ¥å–é¦–ç¯€é»åˆ©ç‡
 
         if (timeInYears >= _points[^1].Tenor)
-            return _points[^1].ZeroRate; // ¥~±À¡]¨Ï¥Î³Ì«á¤@­Ó¸`ÂI¡^
+            return _points[^1].ZeroRate; // å³å´ç•Œå¤–å–æœ«ç¯€é»åˆ©ç‡
 
-        // ¤G¤À·j´M§ä¨ì´¡­È°Ï¶¡
+        // äºŒåˆ†æœå°‹å€é–“ç´¢å¼•
         int index = FindIntervalIndex(timeInYears);
 
-        // ½u©Ê´¡­È
+        // ç·šæ€§æ’å€¼è¨ˆç®—
         var p1 = _points[index];
         var p2 = _points[index + 1];
 
@@ -88,7 +86,7 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     public double GetZeroRate(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         double timeInYears = (date - ReferenceDate).Days / 365.0;
         return GetZeroRate(timeInYears);
@@ -97,7 +95,7 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     public double GetDiscountFactor(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         double timeInYears = (date - ReferenceDate).Days / 365.0;
         return GetDiscountFactor(timeInYears);
@@ -109,10 +107,11 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
         ArgumentOutOfRangeException.ThrowIfNegative(endTime);
 
         if (endTime <= startTime)
-            throw new ArgumentException("µ²§ô®É¶¡¥²¶· > °_©l®É¶¡");
+            throw new ArgumentException("çµæŸæ™‚é–“å¿…é ˆå¤§æ–¼èµ·å§‹æ™‚é–“");
 
-        // Forward Rate ¤½¦¡¡G
-        // f(t1, t2) = [r(t2)*t2 - r(t1)*t1] / (t2 - t1)
+        // é æœŸåˆ©ç‡å…¬å¼ï¼šf(t1, t2) = [r(t2)*t2 - r(t1)*t1] / (t2 - t1)
+        // ä¾†æºï¼šé€£çºŒè¤‡åˆ©é›¶åˆ©ç‡çš„ç„¡å¥—åˆ©é—œä¿‚ (forward extraction)
+        // r(t) ç‚ºå¹´åŒ–é›¶åˆ©ç‡ï¼Œçµæœ forwardRate ç‚ºå€é–“å¹´åŒ–é æœŸåˆ©ç‡
         double r1 = GetZeroRate(startTime);
         double r2 = GetZeroRate(endTime);
 
@@ -128,8 +127,7 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     }
 
     /// <summary>
-    /// ¤G¤À·j´M§ä¨ì´¡­È°Ï¶¡
-    /// ªğ¦^ index ¨Ï±o points[index].Tenor ? t < points[index+1].Tenor
+    /// äºŒåˆ†æœå°‹å€é–“ index, ä½¿ points[index].Tenor â‰¤ t < points[index+1].Tenor
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIntervalIndex(double timeInYears)
@@ -151,7 +149,7 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     }
 
     /// <summary>
-    /// ¨ú±o©Ò¦³¦±½u¸`ÂI¡]°ßÅª¡^
+    /// å–å¾—æ‰€æœ‰ç¯€é» (å”¯è®€)
     /// </summary>
     public IReadOnlyList<CurvePoint> GetPoints() => _points;
 
@@ -162,7 +160,7 @@ public sealed class LinearInterpolatedCurve : IZeroCurve
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç´Á­­¦±½u¡]´ú¸Õ¥Î¡^
+    /// å»ºç«‹æ¨™æº–ç¤ºä¾‹ç·šæ€§æ›²ç·š
     /// </summary>
     public static LinearInterpolatedCurve CreateStandardCurve(
         string curveName,

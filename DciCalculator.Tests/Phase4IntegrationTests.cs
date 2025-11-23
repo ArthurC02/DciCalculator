@@ -7,7 +7,7 @@ using Xunit;
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// Phase 4 ¾ã¦X´ú¸Õ¡G¦±½u©M¦±­±»P©w»ù¤ŞÀº¾ã¦X
+/// Phase 4 æ•´åˆæ¸¬è©¦ï¼šåˆ©ç‡æ›²ç·šã€æ³¢å‹•ç‡æ›²é¢èˆ‡ FX æœŸæ¬Šå®šåƒ¹æµç¨‹æ•´åˆé©—è­‰ã€‚
 /// </summary>
 public class Phase4IntegrationTests
 {
@@ -16,12 +16,12 @@ public class Phase4IntegrationTests
     [Fact]
     public void GarmanKohlhagen_PriceWithCurves_UsesCorrectRates()
     {
-        // Arrange: «Ø¥ß¦±½u
+        // Arrange: å»ºç«‹åŸºç¤åˆ©ç‡æ›²ç·šèˆ‡æ³¢å‹•ç‡æ›²é¢
         var twdCurve = new FlatZeroCurve("TWD", _refDate, 0.015); // 1.5%
         var usdCurve = new FlatZeroCurve("USD", _refDate, 0.050); // 5%
         var volSurface = new FlatVolSurface("USD/TWD", _refDate, 0.10); // 10%
 
-        // Act: ¨Ï¥Î¦±½u©w»ù
+        // Act: ä½¿ç”¨æ›²ç·š API å®šåƒ¹
         double priceWithCurves = GarmanKohlhagen.PriceWithCurves(
             spot: 30.5,
             strike: 30.0,
@@ -32,7 +32,7 @@ public class Phase4IntegrationTests
             optionType: OptionType.Put
         );
 
-        // Act: ­ì©l API¡]À³¸Ó¬Û¦P¡^
+        // Act: åŸå§‹ APIï¼ˆç›´æ¥ä½¿ç”¨å¹´åŒ–åˆ©ç‡ï¼‰
         double priceOriginal = GarmanKohlhagen.PriceFxOption(
             spot: 30.5,
             strike: 30.0,
@@ -43,14 +43,14 @@ public class Phase4IntegrationTests
             optionType: OptionType.Put
         );
 
-        // Assert: ¨â­Ó¤èªkÀ³¸Ó±o¨ì¬Û¦Pµ²ªG
+        // Assert: å…©ç¨®æ–¹æ³•çµæœä¸€è‡´
         Assert.Equal(priceOriginal, priceWithCurves, precision: 6);
     }
 
     [Fact]
     public void GarmanKohlhagen_PriceWithCurves_RespectsTermStructure()
     {
-        // Arrange: «Ø¥ß´Á­­µ²ºc¦±½u¡]µu´Á§C¡Bªø´Á°ª¡^
+        // Arrange: å»ºç«‹å…·æœŸé™çµæ§‹çš„åˆ©ç‡æ›²ç·š (çŸ­å¤©æœŸ vs é•·å¤©æœŸ)
         var twdPoints = new[]
         {
             new CurvePoint(0.25, 0.010),  // 3M: 1.0%
@@ -61,21 +61,21 @@ public class Phase4IntegrationTests
         var usdCurve = new FlatZeroCurve("USD", _refDate, 0.050);
         var volSurface = new FlatVolSurface("USD/TWD", _refDate, 0.10);
 
-        // Act: ©w»ù 3M ©M 1Y ´ÁÅv
+        // Act: å®šåƒ¹ 3M èˆ‡ 1Y æœŸæ¬Š
         double price3M = GarmanKohlhagen.PriceWithCurves(
             30.5, 30.0, twdCurve, usdCurve, volSurface, 0.25, OptionType.Put);
 
         double price1Y = GarmanKohlhagen.PriceWithCurves(
             30.5, 30.0, twdCurve, usdCurve, volSurface, 1.0, OptionType.Put);
 
-        // Assert: 1Y »ù®æÀ³¸Ó¤£¦P¡]¦]¬°§Q²v¤£¦P¡^
+        // Assert: 1Y åƒ¹æ ¼æ‡‰ä¸åŒï¼ˆæœŸé™çµæ§‹å½±éŸ¿ï¼‰
         Assert.NotEqual(price3M, price1Y);
     }
 
     [Fact]
     public void GarmanKohlhagen_PriceWithCurves_RespectsVolSmile()
     {
-        // Arrange: «Ø¥ß Vol Surface¡]¦³ Smile¡^
+        // Arrange: å»ºç«‹å¸¶ Smile çš„æ³¢å‹•ç‡æ›²é¢
         var points = new[]
         {
             new VolSurfacePoint(29.0, 0.25, 0.12), // ITM: 12%
@@ -91,7 +91,7 @@ public class Phase4IntegrationTests
         var twdCurve = new FlatZeroCurve("TWD", _refDate, 0.015);
         var usdCurve = new FlatZeroCurve("USD", _refDate, 0.050);
 
-        // Act: ©w»ù¤£¦P Strike ªº Put
+        // Act: è¨ˆç®—ä¸åŒ Strike çš„ Put åƒ¹æ ¼
         double priceITM = GarmanKohlhagen.PriceWithCurves(
             30.5, 29.0, twdCurve, usdCurve, volSurface, 0.25, OptionType.Put);
 
@@ -101,11 +101,11 @@ public class Phase4IntegrationTests
         double priceOTM = GarmanKohlhagen.PriceWithCurves(
             30.5, 32.0, twdCurve, usdCurve, volSurface, 0.25, OptionType.Put);
 
-        // Assert: OTM Put »ù®æÀ³¸Ó°ª©ó ITM Put¡]¦]¬° Spot > Strike¡^
-        // ¨Ã¥B¤Ï¬M Vol ®t²§
-        Assert.True(priceOTM > priceITM, $"OTM={priceOTM}, ITM={priceITM}");
+        // Assert: è¼ƒé«˜ Strike (è¼ƒ ITM) ä¹‹ Put åƒ¹æ ¼æ‡‰è¼ƒé«˜
+        Assert.True(priceITM < priceATM);
+        Assert.True(priceATM < priceOTM);
         
-        // ÅçÃÒ Vol ¼vÅT¡GStrike 32 (OTM Put) ¨Ï¥Î¸û§C Vol¡A¦ı¤´¦³»ù­È
+        // åƒ¹æ ¼çš†æ‡‰ç‚ºæ­£å€¼ï¼ˆé¢¨éšªä¸­æ€§å®šåƒ¹ï¼‰
         Assert.True(priceOTM > 0);
         Assert.True(priceATM > 0);
     }
@@ -121,7 +121,7 @@ public class Phase4IntegrationTests
         double dfDom = Math.Exp(-rDom * T);
         double dfFor = Math.Exp(-rFor * T);
 
-        // Act: ¨Ï¥Î DF ©w»ù
+        // Act: ä½¿ç”¨æŠ˜ç¾å› å­å®šåƒ¹
         double priceWithDF = GarmanKohlhagen.PriceWithDiscountFactors(
             spot: 30.5,
             strike: 30.0,
@@ -132,7 +132,7 @@ public class Phase4IntegrationTests
             optionType: OptionType.Put
         );
 
-        // Act: ¨Ï¥Î­ì©l API
+        // Act: ä½¿ç”¨åŸå§‹å¹´åŒ–åˆ©ç‡å®šåƒ¹
         double priceOriginal = GarmanKohlhagen.PriceFxOption(
             spot: 30.5,
             strike: 30.0,
@@ -150,7 +150,7 @@ public class Phase4IntegrationTests
     [Fact]
     public void EndToEnd_BootstrapCurvesAndPrice()
     {
-        // Arrange: ±q¥«³õ³ø»ù«Øºc¦±½u
+        // Arrange: ä»¥å¸‚å ´å ±åƒ¹å»ºç«‹æ¨™æº–æ›²ç·š
         var twdQuotes = new Dictionary<string, double>
         {
             { "1M", 0.0150 },
@@ -170,10 +170,10 @@ public class Phase4IntegrationTests
         var twdCurve = CurveBootstrapper.BuildStandardCurve("TWD", _refDate, twdQuotes);
         var usdCurve = CurveBootstrapper.BuildStandardCurve("USD", _refDate, usdQuotes);
 
-        // «Ø¥ß Vol Surface
+        // å»ºç«‹æ¨™æº–æ³¢å‹•ç‡æ›²é¢
         var volSurface = InterpolatedVolSurface.CreateStandardGrid("USD/TWD", 0.10);
 
-        // Act: ©w»ù 90 ¤Ñ DCI Put
+        // Act: å®šåƒ¹ 90 å¤© DCI Put
         double optionPrice = GarmanKohlhagen.PriceWithCurves(
             spot: 30.5,
             strike: 30.0,
@@ -184,7 +184,7 @@ public class Phase4IntegrationTests
             optionType: OptionType.Put
         );
 
-        // Assert: »ù®æÀ³¸Ó¦X²z¡]0.1 ~ 1.0 TWD per USD¡^
+        // Assert: åˆç†åƒ¹æ ¼ä»‹æ–¼ 0.05 ~ 1.0 TWD per USD
         Assert.InRange(optionPrice, 0.05, 1.0);
     }
 }

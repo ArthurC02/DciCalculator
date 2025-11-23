@@ -61,9 +61,9 @@ public static class DciPricer
         // 7) 進行四捨五入（位數可依實務需求調整）
         return new DciQuoteResult(
             NotionalForeign: input.NotionalForeign,
-            InterestFromDeposit: Decimal.Round(interestDeposit, 4, MidpointRounding.AwayFromZero),
-            InterestFromOption: Decimal.Round(optionInterestForeign, 4, MidpointRounding.AwayFromZero),
-            TotalInterestForeign: Decimal.Round(totalInterestForeign, 4, MidpointRounding.AwayFromZero),
+            InterestFromDeposit: decimal.Round(interestDeposit, 4, MidpointRounding.AwayFromZero),
+            InterestFromOption: decimal.Round(optionInterestForeign, 4, MidpointRounding.AwayFromZero),
+            TotalInterestForeign: decimal.Round(totalInterestForeign, 4, MidpointRounding.AwayFromZero),
             CouponAnnual: couponAnnual
         );
     }
@@ -88,7 +88,7 @@ public static class DciPricer
         var theoreticalQuote = Quote(input);
 
         // 2) 期間
-        decimal T = (decimal)input.TenorInYears;
+        _ = (decimal)input.TenorInYears;
 
         // 3) 扣除 Margin
         decimal adjustedOptionInterest = 
@@ -101,8 +101,8 @@ public static class DciPricer
         return new DciQuoteResult(
             NotionalForeign: input.NotionalForeign,
             InterestFromDeposit: theoreticalQuote.InterestFromDeposit,
-            InterestFromOption: Decimal.Round(adjustedOptionInterest, 4, MidpointRounding.AwayFromZero),
-            TotalInterestForeign: Decimal.Round(totalInterest, 4, MidpointRounding.AwayFromZero),
+            InterestFromOption: decimal.Round(adjustedOptionInterest, 4, MidpointRounding.AwayFromZero),
+            TotalInterestForeign: decimal.Round(totalInterest, 4, MidpointRounding.AwayFromZero),
             CouponAnnual: coupon
         );
     }

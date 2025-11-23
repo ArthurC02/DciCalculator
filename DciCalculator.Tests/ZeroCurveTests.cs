@@ -5,7 +5,7 @@ using Xunit;
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// §Q²v¦±½u³æ¤¸´ú¸Õ
+/// é›¶åˆ©ç‡æ›²ç·šæ¸¬è©¦ï¼šå¹³å¦æ›²ç·šã€ç·šæ€§æ’å€¼ã€ä¸‰æ¬¡æ¨£æ¢ã€Forward Rate èˆ‡æŠ˜ç¾å› å­ã€‚
 /// </summary>
 public class ZeroCurveTests
 {
@@ -45,10 +45,10 @@ public class ZeroCurveTests
         };
         var curve = new LinearInterpolatedCurve("USD", DateTime.Today, points);
 
-        // Act: 6M §Q²v¡]T=0.5¡A¦b 0.25 ©M 1.0 ¤§¶¡¡^
+        // Act: 6M é›¶åˆ©ç‡ (T=0.5) ä»‹æ–¼ 0.25 èˆ‡ 1.0 å…©é»ä¹‹é–“
         double rate6M = curve.GetZeroRate(0.5);
 
-        // Assert: ½u©Ê´¡­È
+        // Assert: ç·šæ€§æ’å€¼é©—è­‰
         // weight = (0.5 - 0.25) / (1.0 - 0.25) = 0.25 / 0.75 = 1/3
         // rate = 0.01 + (1/3) * (0.02 - 0.01) = 0.01 + 0.00333... ? 0.01333
         Assert.Equal(0.013333333333333334, rate6M, precision: 6);
@@ -85,10 +85,10 @@ public class ZeroCurveTests
         };
         var curve = new CubicSplineCurve("USD", DateTime.Today, points);
 
-        // Act: ´¡­ÈÂI
+        // Act: æ’å€¼é» (0.75Y)
         double rate9M = curve.GetZeroRate(0.75);
 
-        // Assert: À³¸Ó¦b 1.5% ~ 2% ¤§¶¡
+        // Assert: çµæœä»‹æ–¼ 1.5% ~ 2.0%
         Assert.InRange(rate9M, 0.015, 0.020);
     }
 

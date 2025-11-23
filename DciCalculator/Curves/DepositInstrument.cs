@@ -1,19 +1,15 @@
-using DciCalculator.Models;
-
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¦s´Ú¤u¨ã¡]Deposit Instrument¡^
+/// å­˜æ¬¾å·¥å…· (Deposit Instrument)
 /// 
-/// ©w¸q¡G
-/// - °_©l¤é§ë¤J¥»ª÷
-/// - ¨ì´Á¤é¦¬¦^¥»ª÷ + §Q®§
-/// - §Q²v¡GÂ²³æ§Q®§¡]Simple Interest¡^
+/// çµæ§‹ï¼š
+/// - èµ·å§‹æ—¥æŠ•å…¥åç¾©æœ¬é‡‘
+/// - åˆ°æœŸæ”¶å›æœ¬é‡‘ + å–®åˆ©åˆ©æ¯ (Simple Interest)
+/// - åˆ©æ¯ = æœ¬é‡‘ * r * T
 /// 
-/// ²{­È¤½¦¡¡G
-/// PV = (1 + r_deposit * T) * DF(T)
-/// 
-/// Bootstrap¡G
+/// ç¾å€¼å…¬å¼ï¼šPV = (1 + r_deposit * T) * DF(T)
+/// Bootstrapï¼š
 /// DF(T) = 1 / (1 + r_deposit * T)
 /// r_zero = -ln(DF) / T
 /// </summary>
@@ -25,18 +21,18 @@ public sealed class DepositInstrument : MarketInstrument
     public DayCountConvention DayCount { get; }
 
     /// <summary>
-    /// ¥»ª÷¡]¦W¸qª÷ÃB¡^
+    /// åç¾©æœ¬é‡‘
     /// </summary>
     public double Notional { get; }
 
     /// <summary>
-    /// «Ø¥ß¦s´Ú¤u¨ã
+    /// å»ºç«‹å­˜æ¬¾å·¥å…·
     /// </summary>
-    /// <param name="startDate">°_©l¤é</param>
-    /// <param name="maturityDate">¨ì´Á¤é</param>
-    /// <param name="depositRate">¦s´Ú§Q²v¡]¦~¤Æ¡AÂ²³æ§Q®§¡^</param>
-    /// <param name="dayCount">Day Count Convention</param>
-    /// <param name="notional">¥»ª÷¡]¹w³] 1.0¡^</param>
+    /// <param name="startDate">èµ·å§‹æ—¥</param>
+    /// <param name="maturityDate">åˆ°æœŸæ—¥</param>
+    /// <param name="depositRate">å­˜æ¬¾åˆ©ç‡ (å–®åˆ©)</param>
+    /// <param name="dayCount">æ—¥æ•¸è¨ˆç®—æ³•</param>
+    /// <param name="notional">åç¾©æœ¬é‡‘ (é è¨­ 1.0)</param>
     public DepositInstrument(
         DateTime startDate,
         DateTime maturityDate,
@@ -50,29 +46,26 @@ public sealed class DepositInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ¦s´Úªº²{­È
-    /// 
+    /// è¨ˆç®—å­˜æ¬¾ç¾å€¼
     /// PV = Notional * (1 + r * T) * DF(T)
-    /// 
-    /// Bootstrap ®ÉÀ³¸Ó PV = Notional¡]µL®M§Q¡^
+    /// Par æ¢ä»¶ï¼šPV = Notional (ç„¡å¥—åˆ©)
     /// </summary>
     public override double CalculatePresentValue(IZeroCurve curve)
     {
-        // ­pºâ¹ê»Ú´Á¶¡
+        // å¹´åŒ–æœŸé–“
         double yearFraction = DayCountCalculator.YearFraction(StartDate, MaturityDate, DayCount);
 
-        // ¨ì´Áª÷ÃB¡]¥»ª÷ + §Q®§¡^
+        // åˆ°æœŸé‡‘é¡ (æœ¬é‡‘+åˆ©æ¯)
         double maturityValue = Notional * (1.0 + MarketQuote * yearFraction);
 
-        // §é²{¦^²{¦b
+        // æŠ˜ç¾
         double discountFactor = curve.GetDiscountFactor(MaturityDate);
 
         return maturityValue * discountFactor;
     }
 
     /// <summary>
-    /// ª½±µ­pºâ Zero Rate¡]µL»İ­¡¥N¡^
-    /// 
+    /// è¨ˆç®—å°æ‡‰é›¶åˆ©ç‡ (é–‰å¼)
     /// DF = 1 / (1 + r_deposit * T)
     /// r_zero = -ln(DF) / T
     /// </summary>
@@ -80,17 +73,17 @@ public sealed class DepositInstrument : MarketInstrument
     {
         double yearFraction = DayCountCalculator.YearFraction(StartDate, MaturityDate, DayCount);
 
-        // §é²{¦]¤l
+        // æŠ˜ç¾å› å­
         double discountFactor = 1.0 / (1.0 + MarketQuote * yearFraction);
 
-        // ¹s®§§Q²v¡]³sÄò½Æ§Q¡^
+        // é›¶åˆ©ç‡
         double zeroRate = -Math.Log(discountFactor) / yearFraction;
 
         return zeroRate;
     }
 
     /// <summary>
-    /// ­pºâ§é²{¦]¤l
+    /// è¨ˆç®—æŠ˜ç¾å› å­ (å–®åˆ©)
     /// </summary>
     public double CalculateDiscountFactor()
     {
@@ -99,7 +92,7 @@ public sealed class DepositInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç Deposit¡]±q Tenor ¦r¦ê¡^
+    /// ä¾ Tenor å­—ä¸²å»ºç«‹å­˜æ¬¾å·¥å…·
     /// </summary>
     public static DepositInstrument Create(
         DateTime startDate,

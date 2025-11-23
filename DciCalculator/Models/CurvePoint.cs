@@ -1,23 +1,23 @@
 namespace DciCalculator.Models;
 
 /// <summary>
-/// ¦±½u¸`ÂI¡]Curve Pillar Point¡^
-/// ´y­z¦±½u¤Wªº¤@­Ó¸ê®ÆÂI
+/// æ›²ç·šæ”¯æŸ±é» (Curve Pillar Point)
+/// è¡¨ç¤ºæ”¶ç›Šç‡æ›²ç·šä¸Šä¸€å€‹åˆ°æœŸç¯€é»
 /// </summary>
 public readonly record struct CurvePoint
 {
     /// <summary>
-    /// ´Á­­¡]¦~¡^
+    /// åˆ°æœŸæ™‚é–“ (å¹´)
     /// </summary>
     public double Tenor { get; init; }
 
     /// <summary>
-    /// ¹s®§§Q²v¡]³sÄò½Æ§Q¡^
+    /// é›¶åˆ©ç‡ (é€£çºŒè¤‡åˆ©ç‡)
     /// </summary>
     public double ZeroRate { get; init; }
 
     /// <summary>
-    /// §é²{¦]¤l¡]­l¥Í­È¡A¥i§Ö¨ú¡^
+    /// æŠ˜ç¾å› å­ (å¯ç”±é›¶åˆ©ç‡æ¨å°)
     /// DF = exp(-ZeroRate * Tenor)
     /// </summary>
     public double DiscountFactor => Math.Exp(-ZeroRate * Tenor);
@@ -25,17 +25,17 @@ public readonly record struct CurvePoint
     public CurvePoint(double tenor, double zeroRate)
     {
         if (tenor < 0)
-            throw new ArgumentOutOfRangeException(nameof(tenor), "´Á­­¤£¯à¬°­t");
+            throw new ArgumentOutOfRangeException(nameof(tenor), "Tenor ä¸å¯ç‚ºè² å€¼");
 
         if (double.IsNaN(zeroRate) || double.IsInfinity(zeroRate))
-            throw new ArgumentException("§Q²v¥²¶·¬°¦³®Ä¼Æ­È", nameof(zeroRate));
+            throw new ArgumentException("ZeroRate éæ³• (NaN æˆ– Infinity)", nameof(zeroRate));
 
         Tenor = tenor;
         ZeroRate = zeroRate;
     }
 
     /// <summary>
-    /// ±q§é²{¦]¤l«Ø¥ß¦±½uÂI
+    /// ç”±æŠ˜ç¾å› å­å»ºç«‹ CurvePoint
     /// r = -ln(DF) / T
     /// </summary>
     public static CurvePoint FromDiscountFactor(double tenor, double discountFactor)
@@ -44,22 +44,22 @@ public readonly record struct CurvePoint
         
         if (discountFactor <= 0 || discountFactor > 1.0)
             throw new ArgumentOutOfRangeException(nameof(discountFactor),
-                "§é²{¦]¤l¥²¶·¦b (0, 1] ½d³ò¤º");
+                "DiscountFactor å¿…é ˆä½æ–¼ (0, 1] å€é–“");
 
         double zeroRate = -Math.Log(discountFactor) / tenor;
         return new CurvePoint(tenor, zeroRate);
     }
 
     /// <summary>
-    /// ÅçÃÒ¦±½uÂI¬O§_¦X²z
+    /// é©—è­‰ç•¶å‰ç¯€é»è³‡æ–™æ˜¯å¦æœ‰æ•ˆ
     /// </summary>
     public bool IsValid()
     {
         return Tenor >= 0 &&
                !double.IsNaN(ZeroRate) &&
                !double.IsInfinity(ZeroRate) &&
-               ZeroRate > -0.20 &&  // ³Ì§C -20%
-               ZeroRate < 0.50;     // ³Ì°ª 50%
+               ZeroRate > -0.20 &&  // ä¸‹é™ -20%
+               ZeroRate < 0.50;     // ä¸Šé™ 50%
     }
 
     public override string ToString()
@@ -69,27 +69,27 @@ public readonly record struct CurvePoint
 }
 
 /// <summary>
-/// ´¡­È¤èªk¦CÁ|
+/// æ›²ç·šæ’å€¼æ–¹æ³•
 /// </summary>
 public enum InterpolationMethod
 {
     /// <summary>
-    /// ½u©Ê´¡­È¡]Zero Rate¡^
+    /// å°é›¶åˆ©ç‡åšç·šæ€§æ’å€¼ (Zero Rate)
     /// </summary>
     Linear,
 
     /// <summary>
-    /// ¹ï¼Æ½u©Ê´¡­È¡]Discount Factor¡^
+    /// å°æŠ˜ç¾å› å­åšå°æ•¸ç·šæ€§æ’å€¼ (Discount Factor)
     /// </summary>
     LogLinear,
 
     /// <summary>
-    /// ¤T¦¸¼Ë±ø´¡­È¡]¦ÛµMÃä¬É±ø¥ó¡^
+    /// ä¸‰æ¬¡æ¨£æ¢æ’å€¼ (å¹³æ»‘æ›²ç·š)
     /// </summary>
     CubicSpline,
 
     /// <summary>
-    /// ¤£´¡­È¡]¨Ï¥Î³Ìªñ¸`ÂI¡^
+    /// å¹³å¦å¤–æ¨ (ä½¿ç”¨æœ€è¿‘ç¯€é»å€¼)
     /// </summary>
     Flat
 }

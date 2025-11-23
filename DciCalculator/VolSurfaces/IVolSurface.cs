@@ -1,59 +1,59 @@
 namespace DciCalculator.VolSurfaces;
 
 /// <summary>
-/// ªi°Ê«×¦±­±¤¶­±
-/// ´£¨Ñ¤£¦P Strike ©M Tenor ªºÁô§tªi°Ê«×
+/// æ³¢å‹•ç‡æ›²é¢ä»‹é¢ã€‚
+/// æä¾›ä¾æŒ‡å®š Strike èˆ‡ Tenor å–å¾—æœŸæ¬Šéš±å«æ³¢å‹•ç‡çš„åŠŸèƒ½ã€‚
 /// 
-/// ¥Î³~¡G
-/// - FX ´ÁÅv©w»ù¡]¦Ò¼{ Smile/Skew¡^
-/// - Greeks ­pºâ
-/// - ­·ÀIºŞ²z
+/// åŠŸèƒ½æ¶µè“‹ï¼š
+/// - FX æœŸæ¬Šå ±åƒ¹ï¼ˆå¯è€ƒæ…® Smile / Skewï¼‰
+/// - Greeks è¨ˆç®—
+/// - é¢¨éšªç®¡ç†æ”¯æ´
 /// </summary>
 public interface IVolSurface
 {
     /// <summary>
-    /// ¦±­±¦WºÙ¡]¨Ò¦p "USD/TWD"¡^
+    /// æ›²é¢åç¨±ï¼ˆä¾‹å¦‚ "USD/TWD"ï¼‰ã€‚
     /// </summary>
     string SurfaceName { get; }
 
     /// <summary>
-    /// °ò·Ç¤é´Á
+    /// åŸºæº–æ—¥æœŸã€‚
     /// </summary>
     DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// ¨ú±o«ü©w Strike ©M Tenor ªºªi°Ê«×
+    /// å–å¾—æŒ‡å®š Strike èˆ‡ Tenor çš„éš±å«æ³¢å‹•ç‡ã€‚
     /// </summary>
-    /// <param name="strike">°õ¦æ»ù¡]µ´¹ï­È¡^</param>
-    /// <param name="tenor">´Á­­¡]¦~¡^</param>
-    /// <returns>Áô§tªi°Ê«×¡]¦~¤Æ¡^</returns>
+    /// <param name="strike">å±¥ç´„åƒ¹ï¼ˆæ­£æ•¸ï¼‰ã€‚</param>
+    /// <param name="tenor">æœŸé™ï¼ˆä»¥å¹´è¡¨ç¤ºï¼‰ã€‚</param>
+    /// <returns>éš±å«æ³¢å‹•ç‡ï¼ˆå¹´åŒ–ï¼‰ã€‚</returns>
     double GetVolatility(double strike, double tenor);
 
     /// <summary>
-    /// ¨ú±o ATM¡]At-The-Money¡^ªi°Ê«×
+    /// å–å¾— ATM (At-The-Money) éš±å«æ³¢å‹•ç‡ã€‚
     /// </summary>
-    /// <param name="spot">§Y´Á»ù®æ</param>
-    /// <param name="tenor">´Á­­¡]¦~¡^</param>
-    /// <returns>ATM ªi°Ê«×</returns>
+    /// <param name="spot">ç¾è²¨åƒ¹æ ¼ã€‚</param>
+    /// <param name="tenor">æœŸé™ï¼ˆå¹´ï¼‰ã€‚</param>
+    /// <returns>ATM éš±å«æ³¢å‹•ç‡ã€‚</returns>
     double GetATMVolatility(double spot, double tenor);
 
     /// <summary>
-    /// ¨ú±o«ü©w Moneyness ©M Tenor ªºªi°Ê«×
-    /// Moneyness = Strike / Forward
+    /// ä¾æŒ‡å®š Moneyness èˆ‡ Tenor å–å¾—éš±å«æ³¢å‹•ç‡ã€‚
+    /// Moneyness = Strike / Forwardã€‚
     /// </summary>
-    /// <param name="moneyness">Moneyness¡]¨Ò¦p 0.95 = 5% OTM¡^</param>
-    /// <param name="tenor">´Á­­¡]¦~¡^</param>
-    /// <returns>Áô§tªi°Ê«×</returns>
+    /// <param name="moneyness">è²¨å¹£æ€§ï¼ˆä¾‹å¦‚ 0.95 ä»£è¡¨ 5% OTMï¼‰ã€‚</param>
+    /// <param name="tenor">æœŸé™ï¼ˆå¹´ï¼‰ã€‚</param>
+    /// <returns>éš±å«æ³¢å‹•ç‡ã€‚</returns>
     double GetVolatilityByMoneyness(double moneyness, double tenor);
 
     /// <summary>
-    /// ¨ú±o¦±­±ªº¦³®Ä½d³ò
+    /// å–å¾—ç›®å‰æ›²é¢æœ‰æ•ˆæŸ¥è©¢ç¯„åœã€‚
     /// </summary>
-    /// <returns>(³Ì¤p Strike, ³Ì¤j Strike, ³Ì¤p Tenor, ³Ì¤j Tenor)</returns>
+    /// <returns>(æœ€å° Strike, æœ€å¤§ Strike, æœ€å° Tenor, æœ€å¤§ Tenor)</returns>
     (double MinStrike, double MaxStrike, double MinTenor, double MaxTenor) GetValidRange();
 
     /// <summary>
-    /// ÀË¬d«ü©wÂI¬O§_¦b¦±­±½d³ò¤º
+    /// æª¢æŸ¥æŒ‡å®š Strike / Tenor æ˜¯å¦è½åœ¨æœ‰æ•ˆç¯„åœå…§ã€‚
     /// </summary>
     bool IsInRange(double strike, double tenor);
 }

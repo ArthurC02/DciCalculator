@@ -1,23 +1,22 @@
-using DciCalculator;
 using DciCalculator.Models;
 using Xunit;
 
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// StrikeSolver ³æ¤¸´ú¸Õ
+/// StrikeSolver æ¸¬è©¦ï¼šé©—è­‰ç‚ºé”æˆç›®æ¨™å¹´åŒ– Coupon ä¹‹ Strike åæ±‚èˆ‡éšæ¢¯ç”Ÿæˆåˆç†æ€§ã€‚
 /// </summary>
 public class StrikeSolverTests
 {
     [Fact]
     public void SolveStrike_ForTargetCoupon_Converges()
     {
-        // Arrange: «Ø¥ß°ò·Ç DCI ¿é¤J
+        // Arrange: å»ºç«‹ DCI è¼¸å…¥
         var spotQuote = new FxQuote(Bid: 30.48m, Ask: 30.52m);
         var input = new DciInput(
             NotionalForeign: 10_000m,
             SpotQuote: spotQuote,
-            Strike: 30.00m, // ªì©l­È¡A±N³Q©¿²¤
+            Strike: 30.00m, // åˆå§‹çŒœæ¸¬å€¼
             RateDomestic: 0.015,
             RateForeign: 0.05,
             Volatility: 0.10,
@@ -30,11 +29,11 @@ public class StrikeSolverTests
         // Act
         decimal strike = StrikeSolver.SolveStrike(input, targetCoupon);
 
-        // Assert: Strike À³¸Ó¦X²z¥B¹F¨ì¥Ø¼Ğ Coupon
+        // Assert: æ­£å¸¸æ±‚å¾— Strike ä¸¦ä½¿ Coupon æ¥è¿‘ç›®æ¨™
         Assert.True(strike > 0);
         Assert.True(StrikeSolver.IsStrikeReasonable(strike, spotQuote.Mid));
 
-        // ÅçÃÒ Coupon
+        // å†æ¬¡ä¼°åƒ¹é©—è­‰ Coupon
         var verifyInput = input with { Strike = strike };
         var verifyQuote = DciPricer.Quote(verifyInput);
         Assert.Equal(targetCoupon, verifyQuote.CouponAnnual, precision: 3);
@@ -63,7 +62,7 @@ public class StrikeSolverTests
         // Assert
         Assert.Equal(10, ladder.Count);
 
-        // Coupon À³¸ÓÀH Strike »¼¼W
+        // Coupon æ‡‰éš¨ Strike ä¸Šå‡è€Œä¸Šå‡
         for (int i = 1; i < ladder.Count; i++)
         {
             Assert.True(ladder[i].Strike > ladder[i - 1].Strike);

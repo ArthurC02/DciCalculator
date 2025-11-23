@@ -1,67 +1,65 @@
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¹s®§§Q²v¦±½u¤¶­±
-/// Zero Rate Curve¡G´y­z¤£¦P´Á­­ªºµL­·ÀI§Q²v
+/// é›¶åˆ©ç‡æ›²ç·šä»‹é¢ (Zero Rate Curve)
+/// æè¿°å„æœŸé™å°æ‡‰ä¹‹å¹´åŒ–é›¶åˆ©ç‡ã€‚
 /// 
-/// ¥Î³~¡G
-/// - ºë½T§é²{¤£¦P´Á­­ªº²{ª÷¬y
-/// - ­pºâ Forward Rate
-/// - DCI ©w»ù¤¤ªº§Q²v´Á­­µ²ºc
+/// åŠŸèƒ½ï¼š
+/// - å–å¾—é›¶åˆ©ç‡èˆ‡æŠ˜ç¾å› å­
+/// - è¨ˆç®—é æœŸåˆ©ç‡ (Forward Rate)
+/// - æä¾›å®šåƒ¹/é¢¨æ§ä½¿ç”¨
 /// </summary>
 public interface IZeroCurve
 {
     /// <summary>
-    /// ¦±½u¦WºÙ¡]¨Ò¦p "USD", "TWD"¡^
+    /// æ›²ç·šåç¨± (ä¾‹ï¼š"USD")
     /// </summary>
     string CurveName { get; }
 
     /// <summary>
-    /// °ò·Ç¤é´Á¡]¦±½u«Øºc¤é´Á¡^
+    /// åŸºæº–æ—¥ (è³‡æ–™åƒè€ƒæ—¥)
     /// </summary>
     DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// ¨ú±o«ü©w´Á­­ªº¹s®§§Q²v¡]³sÄò½Æ§Q¡^
+    /// å–å¾—æŒ‡å®šå¹´æœŸé›¶åˆ©ç‡
     /// </summary>
-    /// <param name="timeInYears">´Á­­¡]¦~¡^</param>
-    /// <returns>¹s®§§Q²v¡]¦~¤Æ¡A¨Ò¦p 0.015 = 1.5%¡^</returns>
+    /// <param name="timeInYears">å¹´æœŸ (å¹´)</param>
+    /// <returns>é›¶åˆ©ç‡ (e.g. 0.015 = 1.5%)</returns>
     double GetZeroRate(double timeInYears);
 
     /// <summary>
-    /// ¨ú±o«ü©w´Á­­ªº§é²{¦]¤l
-    /// DF(T) = exp(-r(T) * T)
+    /// å–å¾—æŒ‡å®šå¹´æœŸæŠ˜ç¾å› å­ DF(T) = exp(-r(T)*T)
     /// </summary>
-    /// <param name="timeInYears">´Á­­¡]¦~¡^</param>
-    /// <returns>§é²{¦]¤l</returns>
+    /// <param name="timeInYears">å¹´æœŸ</param>
+    /// <returns>æŠ˜ç¾å› å­</returns>
     double GetDiscountFactor(double timeInYears);
 
     /// <summary>
-    /// ¨ú±o«ü©w¤é´Áªº¹s®§§Q²v
+    /// å–å¾—æŒ‡å®šæ—¥æœŸé›¶åˆ©ç‡
     /// </summary>
-    /// <param name="date">¥Ø¼Ğ¤é´Á</param>
-    /// <returns>¹s®§§Q²v</returns>
+    /// <param name="date">æ—¥æœŸ</param>
+    /// <returns>é›¶åˆ©ç‡</returns>
     double GetZeroRate(DateTime date);
 
     /// <summary>
-    /// ¨ú±o«ü©w¤é´Áªº§é²{¦]¤l
+    /// å–å¾—æŒ‡å®šæ—¥æœŸæŠ˜ç¾å› å­
     /// </summary>
-    /// <param name="date">¥Ø¼Ğ¤é´Á</param>
-    /// <returns>§é²{¦]¤l</returns>
+    /// <param name="date">æ—¥æœŸ</param>
+    /// <returns>æŠ˜ç¾å› å­</returns>
     double GetDiscountFactor(DateTime date);
 
     /// <summary>
-    /// ­pºâ Forward Rate
-    /// Forward Rate from T1 to T2 = [r(T2)*T2 - r(T1)*T1] / (T2 - T1)
+    /// è¨ˆç®—é æœŸåˆ©ç‡ f(T1,T2) = [r(T2)*T2 - r(T1)*T1] / (T2 - T1)
     /// </summary>
-    /// <param name="startTime">°_©l®É¶¡¡]¦~¡^</param>
-    /// <param name="endTime">µ²§ô®É¶¡¡]¦~¡^</param>
-    /// <returns>Forward Rate¡]¦~¤Æ¡^</returns>
+    /// <param name="startTime">èµ·å§‹å¹´æœŸ</param>
+    /// <param name="endTime">çµæŸå¹´æœŸ</param>
+    /// <returns>é æœŸåˆ©ç‡</returns>
     double GetForwardRate(double startTime, double endTime);
 
     /// <summary>
-    /// ¨ú±o¦±½uªº¦³®Ä½d³ò¡]³Ì¤p©M³Ì¤j´Á­­¡^
+    /// å–å¾—æ”¯æ´å¹´æœŸç¯„åœ (æœ€å°, æœ€å¤§)
     /// </summary>
-    /// <returns>(³Ì¤p´Á­­, ³Ì¤j´Á­­)</returns>
+    /// <returns>(æœ€å°å¹´æœŸ, æœ€å¤§å¹´æœŸ)</returns>
     (double MinTenor, double MaxTenor) GetValidRange();
 }

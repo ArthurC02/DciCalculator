@@ -1,10 +1,9 @@
-using DciCalculator;
 using Xunit;
 
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// DayCountCalculator ³æ¤¸´ú¸Õ
+/// æ—¥æ•¸/å¹´åŒ–è¨ˆç®— (DayCountCalculator) æ¸¬è©¦ï¼šé©—è­‰ Act/365ã€Act/360ã€Tenor è§£æèˆ‡å•†æ¥­æ—¥é‚è¼¯ã€‚
 /// </summary>
 public class DayCountCalculatorTests
 {
@@ -13,7 +12,7 @@ public class DayCountCalculatorTests
     {
         // Arrange
         var startDate = new DateTime(2024, 1, 1);
-        var endDate = new DateTime(2024, 4, 1); // 91 ¤Ñ
+        var endDate = new DateTime(2024, 4, 1); // 91 å¤©
 
         // Act
         double yearFraction = DayCountCalculator.YearFraction(
@@ -28,7 +27,7 @@ public class DayCountCalculatorTests
     {
         // Arrange
         var startDate = new DateTime(2024, 1, 1);
-        var endDate = new DateTime(2024, 4, 1); // 91 ¤Ñ
+        var endDate = new DateTime(2024, 4, 1); // 91 å¤©
 
         // Act
         double yearFraction = DayCountCalculator.YearFraction(
@@ -59,7 +58,7 @@ public class DayCountCalculatorTests
         var referenceDate = new DateTime(2024, 1, 1);
 
         // Act
-        var (days, yearFraction) = DayCountCalculator.ParseTenor("90D", referenceDate);
+        var (days, _) = DayCountCalculator.ParseTenor("90D", referenceDate);
 
         // Assert
         Assert.Equal(90, days);
@@ -68,14 +67,14 @@ public class DayCountCalculatorTests
     [Fact]
     public void CalculateMaturityDate_90Days_AdjustsForWeekend()
     {
-        // Arrange: 2024-01-01 ¬O¬P´Á¤@
+        // Arrange: 2024-01-01 ç‚ºæ˜ŸæœŸä¸€
         var startDate = new DateTime(2024, 1, 1);
 
         // Act
         var maturityDate = DayCountCalculator.CalculateMaturityDate(
             startDate, tenorInDays: 90, adjustForWeekends: true);
 
-        // Assert: ¤£À³¸Ó¸¨¦b¶g¥½
+        // Assert: åˆ°æœŸæ—¥ä¸è½åœ¨é€±æœ«
         Assert.NotEqual(DayOfWeek.Saturday, maturityDate.DayOfWeek);
         Assert.NotEqual(DayOfWeek.Sunday, maturityDate.DayOfWeek);
     }
@@ -83,7 +82,7 @@ public class DayCountCalculatorTests
     [Fact]
     public void IsBusinessDay_Monday_ReturnsTrue()
     {
-        // Arrange: 2024-01-01 ¬O¬P´Á¤@
+        // Arrange: 2024-01-01 æ˜ŸæœŸä¸€
         var date = new DateTime(2024, 1, 1);
 
         // Act
@@ -96,7 +95,7 @@ public class DayCountCalculatorTests
     [Fact]
     public void IsBusinessDay_Saturday_ReturnsFalse()
     {
-        // Arrange: 2024-01-06 ¬O¬P´Á¤»
+        // Arrange: 2024-01-06 æ˜ŸæœŸå…­
         var date = new DateTime(2024, 1, 6);
 
         // Act

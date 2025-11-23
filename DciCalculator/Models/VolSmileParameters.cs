@@ -1,37 +1,37 @@
 namespace DciCalculator.Models;
 
 /// <summary>
-/// Volatility Smile °Ñ¼Æ
-/// ¨Ï¥Î¥«³õºD¥Îªº ATM / Risk Reversal / Butterfly ³ø»ù®æ¦¡
+/// Volatility Smile åƒæ•¸
+/// æ¡ç”¨å¤–åŒ¯æœŸæ¬Šå¸¸è¦‹çš„ ATM / Risk Reversal / Butterfly ä¸‰åƒæ•¸çµæ§‹ã€‚
 /// 
-/// ¥«³õ³ø»ù½d¨Ò¡]25 Delta¡^¡G
+/// ç¯„ä¾‹ï¼ˆæŸä¸€ 25 Delta æœŸé™ï¼‰ï¼š
 /// - ATM Vol: 10.0%
-/// - 25D Risk Reversal: 1.5% (Putºİ°ª©óCallºİ)
-/// - 25D Butterfly: 0.5% (¨âºİ°ª©ó¤¤¶¡)
+/// - 25D Risk Reversal: 1.5% (Put éš±å«æ³¢å‹•ç‡é«˜æ–¼ Callï¼Œè¡¨ç¤ºå‘ä¸‹åæ–œéœ€æ±‚è¼ƒå¼·)
+/// - 25D Butterfly: 0.5% (å…©ç¿¼é«˜æ–¼ä¸­é–“ï¼Œå‘ˆå¾®ç¬‘å‹)
 /// </summary>
 public sealed record VolSmileParameters
 {
     /// <summary>
-    /// ATM¡]At-The-Money¡^ªi°Ê«×
+    /// ATM (At-The-Money) éš±å«æ³¢å‹•ç‡ã€‚
     /// </summary>
     public double ATMVol { get; init; }
 
     /// <summary>
-    /// Risk Reversal¡]25 Delta Put - 25 Delta Call¡^
-    /// RR > 0: Put ºİªi°Ê«×°ª©ó Call ºİ¡]¤U¦æ­·ÀI°ª¡^
-    /// RR < 0: Call ºİªi°Ê«×°ª©ó Put ºİ
+    /// Risk Reversal (25 Delta Put - 25 Delta Call)ã€‚
+    /// RR > 0: Put éš±å«æ³¢å‹•ç‡é«˜æ–¼ Callï¼ˆå‘ä¸‹åæ–œ / çœ‹è·Œä¿è­·éœ€æ±‚ï¼‰ã€‚
+    /// RR < 0: Call éš±å«æ³¢å‹•ç‡é«˜æ–¼ Putï¼ˆå‘ä¸Šåæ–œï¼‰ã€‚
     /// </summary>
     public double RiskReversal25D { get; init; }
 
     /// <summary>
-    /// Butterfly¡](25D Put + 25D Call) / 2 - ATM¡^
-    /// BF > 0: ¨âºİªi°Ê«×°ª©ó¤¤¶¡¡]Smile §Îª¬¡^
-    /// BF = 0: ¥­©Z
+    /// Butterfly = (25D Put + 25D Call) / 2 - ATMã€‚
+    /// BF > 0: å…©ç¿¼é«˜æ–¼ä¸­é–“ï¼ˆå¾®ç¬‘ Smileï¼‰ã€‚
+    /// BF = 0: å¹³å¦ã€‚
     /// </summary>
     public double Butterfly25D { get; init; }
 
     /// <summary>
-    /// Tenor¡]´Á­­¡A¦~¡^
+    /// Tenor åˆ°æœŸå¹´æ•¸ï¼ˆä»¥å¹´ç‚ºå–®ä½ï¼‰ã€‚
     /// </summary>
     public double Tenor { get; init; }
 
@@ -43,15 +43,15 @@ public sealed record VolSmileParameters
     {
         if (atmVol <= 0 || atmVol > 5.0)
             throw new ArgumentOutOfRangeException(nameof(atmVol),
-                "ATM ªi°Ê«×¥²¶·¦b (0, 5.0] ½d³ò¤º");
+                "ATM éš±å«æ³¢å‹•ç‡å¿…é ˆè½åœ¨ (0, 5.0] ç¯„åœ");
 
         if (Math.Abs(riskReversal25D) > 0.5)
             throw new ArgumentOutOfRangeException(nameof(riskReversal25D),
-                "Risk Reversal ¥²¶·¦b [-0.5, 0.5] ½d³ò¤º");
+                "Risk Reversal å¿…é ˆè½åœ¨ [-0.5, 0.5] ç¯„åœ");
 
         if (butterfly25D < 0 || butterfly25D > 0.5)
             throw new ArgumentOutOfRangeException(nameof(butterfly25D),
-                "Butterfly ¥²¶·¦b [0, 0.5] ½d³ò¤º");
+                "Butterfly å¿…é ˆè½åœ¨ [0, 0.5] ç¯„åœ");
 
         if (tenor <= 0)
             throw new ArgumentOutOfRangeException(nameof(tenor));
@@ -63,7 +63,7 @@ public sealed record VolSmileParameters
     }
 
     /// <summary>
-    /// ­pºâ 25 Delta Put ªi°Ê«×
+    /// è¨ˆç®— 25 Delta Put éš±å«æ³¢å‹•ç‡ã€‚
     /// Vol_25P = ATM + BF + RR/2
     /// </summary>
     public double Get25DeltaPutVol()
@@ -72,7 +72,7 @@ public sealed record VolSmileParameters
     }
 
     /// <summary>
-    /// ­pºâ 25 Delta Call ªi°Ê«×
+    /// è¨ˆç®— 25 Delta Call éš±å«æ³¢å‹•ç‡ã€‚
     /// Vol_25C = ATM + BF - RR/2
     /// </summary>
     public double Get25DeltaCallVol()
@@ -81,14 +81,14 @@ public sealed record VolSmileParameters
     }
 
     /// <summary>
-    /// ¦ôºâ«ü©w Delta ªºªi°Ê«×¡]½u©Ê´¡­È¡^
+    /// ä¼°ç®—æŒ‡å®š Delta çš„éš±å«æ³¢å‹•ç‡ï¼ˆç°¡æ˜“åˆ†æ®µç·šæ€§è¿‘ä¼¼ï¼‰ã€‚
     /// </summary>
-    /// <param name="delta">Delta¡]-1 ¨ì 1¡A­t¼Æ¬° Put¡^</param>
-    /// <returns>Áô§tªi°Ê«×</returns>
+    /// <param name="delta">Delta (-1 è‡³ 1)ï¼Œè² å€¼ä»£è¡¨ Putã€‚</param>
+    /// <returns>è¿‘ä¼¼éš±å«æ³¢å‹•ç‡ã€‚</returns>
     public double EstimateVolByDelta(double delta)
     {
         if (Math.Abs(delta) > 1.0)
-            throw new ArgumentOutOfRangeException(nameof(delta), "Delta ¥²¶·¦b [-1, 1] ½d³ò¤º");
+            throw new ArgumentOutOfRangeException(nameof(delta), "Delta å¿…é ˆè½åœ¨ [-1, 1] ç¯„åœ");
 
         // ATM
         if (Math.Abs(Math.Abs(delta) - 0.5) < 0.01)
@@ -98,13 +98,13 @@ public sealed record VolSmileParameters
 
         if (absDelta > 0.5)
         {
-            // ¥~±À¦Ü 10D ©Î§ó»·
+            // è¶…å‡ºå¸¸è¦‹æ’å€¼å€é–“ï¼Œç°¡å–®å¤–æ¨ï¼šåŠ å€ Butterfly ä½œç‚ºç¿¼éƒ¨å¢åš
             return ATMVol + Butterfly25D * 2.0;
         }
 
-        if (delta > 0) // Call ºİ
+        if (delta > 0) // Call æ–¹å‘
         {
-            // ±q ATM (0.5) ´¡­È¨ì 25D Call (0.25)
+            // åœ¨ ATM (0.5) èˆ‡ 25D Call (0.25) ä¹‹é–“ç·šæ€§æ’å€¼
             if (absDelta >= 0.25)
             {
                 double weight = (0.5 - absDelta) / 0.25;
@@ -112,13 +112,13 @@ public sealed record VolSmileParameters
             }
             else
             {
-                // ¥~±À
+                // é€²ä¸€æ­¥å‘ç¿¼éƒ¨é è¿‘ï¼šç›´æ¥å– 25D Call å€¼
                 return Get25DeltaCallVol();
             }
         }
-        else // Put ºİ (delta < 0)
+        else // Put æ–¹å‘ (delta < 0)
         {
-            // ±q ATM (-0.5) ´¡­È¨ì 25D Put (-0.25)
+            // åœ¨ ATM (-0.5) èˆ‡ 25D Put (-0.25) ä¹‹é–“ç·šæ€§æ’å€¼
             if (absDelta <= 0.5 && absDelta >= 0.25)
             {
                 double weight = (absDelta - 0.25) / 0.25;
@@ -126,14 +126,14 @@ public sealed record VolSmileParameters
             }
             else
             {
-                // ¥~±À
+                // æ›´æ¥è¿‘ Put ç¿¼ï¼šç›´æ¥å– 25D Put å€¼
                 return Get25DeltaPutVol();
             }
         }
     }
 
     /// <summary>
-    /// «Ø¥ß¥­©Z Smile¡]µL RR ©M BF¡^
+    /// å»ºç«‹å¹³å¦ Smileï¼ˆRR=0, BF=0ï¼‰ã€‚
     /// </summary>
     public static VolSmileParameters CreateFlat(double atmVol, double tenor)
     {

@@ -1,26 +1,23 @@
-using DciCalculator.Models;
-
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// §Q²v¥æ´«¤u¨ã¡]Interest Rate Swap, IRS¡^
+/// åˆ©ç‡äº¤æ› (Interest Rate Swap, IRS)
 /// 
-/// ©w¸q¡G
-/// - Fixed Leg¡G©T©w§Q²v¤ä¥I¡]¨C´Á¤ä¥I©T©w§Q²v¡^
-/// - Float Leg¡G¯B°Ê§Q²v¤ä¥I¡]°²³]»P Zero Rate ¤@­P¡^
+/// çµæ§‹ï¼š
+/// - Fixed Legï¼šæ”¯ä»˜å›ºå®šåˆ©ç‡ (å„æœŸåç¾©æœ¬é‡‘ * å›ºå®šåˆ©ç‡)
+/// - Floating Legï¼šæ”¯ä»˜æµ®å‹•åˆ©ç‡ (ä¾ç•¶æœŸé‡æ–°è¨­å®šçš„é›¶åˆ©ç‡)
 /// 
-/// ²{­È¤½¦¡¡G
-/// PV_Fixed = Notional * Fixed_Rate * £U[DF(Ti) * £ni]
-/// PV_Float = Notional * [DF(T0) - DF(Tn)]
+/// ç¾å€¼å…¬å¼ï¼š
+/// PV_Fixed = Notional * Fixed_Rate * Î£[ DF(T_i) * Î”t_i ]
+/// PV_Float = Notional * ( DF(T_0) - DF(T_n) )
 /// 
-/// Bootstrap¡G
-/// PV_Fixed = PV_Float (Par Swap)
-/// ¨D¸Ñ DF(Tn)
+/// Bootstrapï¼šå¹³åƒ¹(Par)æ¢ä»¶ä¸‹ PV_Fixed = PV_Floatï¼Œ
+/// ä»¥æ­¤åæ¨æœ«ç«¯æŠ˜ç¾å› å­ DF(T_n)ã€‚
 /// </summary>
 public sealed class SwapInstrument : MarketInstrument
 {
     /// <summary>
-    /// ¥I´ÚÀW²v¡]¨C¦~´X¦¸¡^
+    /// æ”¯ä»˜é »ç‡ (æ¯å¹´æœŸæ•¸ï¼Œä¾‹å¦‚ 2=åŠå¹´ä»˜ã€4=å­£ä»˜)
     /// </summary>
     public int PaymentFrequency { get; }
 
@@ -30,19 +27,19 @@ public sealed class SwapInstrument : MarketInstrument
     public DayCountConvention DayCount { get; }
 
     /// <summary>
-    /// ¥»ª÷
+    /// åç¾©æœ¬é‡‘
     /// </summary>
     public double Notional { get; }
 
     /// <summary>
-    /// «Ø¥ß IRS ¤u¨ã
+    /// å»ºç«‹ IRS äº¤æ›åˆç´„
     /// </summary>
-    /// <param name="startDate">°_©l¤é</param>
-    /// <param name="maturityDate">¨ì´Á¤é</param>
-    /// <param name="swapRate">Swap Fixed Rate¡]¦~¤Æ¡^</param>
-    /// <param name="paymentFrequency">¥I´ÚÀW²v¡]2=¥b¦~¥I¡A4=©u¥I¡^</param>
-    /// <param name="dayCount">Day Count Convention</param>
-    /// <param name="notional">¥»ª÷</param>
+    /// <param name="startDate">èµ·å§‹æ—¥</param>
+    /// <param name="maturityDate">åˆ°æœŸæ—¥</param>
+    /// <param name="swapRate">å›ºå®šäº¤æ›åˆ©ç‡ (Par å›ºå®šç‡)</param>
+    /// <param name="paymentFrequency">æ”¯ä»˜é »ç‡ (2=åŠå¹´, 4=å­£åº¦)</param>
+    /// <param name="dayCount">æ—¥æ•¸è¨ˆç®—æ³•</param>
+    /// <param name="notional">åç¾©æœ¬é‡‘</param>
     public SwapInstrument(
         DateTime startDate,
         DateTime maturityDate,
@@ -61,18 +58,15 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ Swap ²{­È
-    /// 
-    /// PV = PV_Fixed - PV_Float
-    /// 
-    /// Par Swap: PV = 0
+    /// è¨ˆç®— Swap ç¾å€¼
+    /// PV = PV_Fixed - PV_Floatï¼›Par Swap æ™‚ PV=0ã€‚
     /// </summary>
     public override double CalculatePresentValue(IZeroCurve curve)
     {
-        // ­pºâ Fixed Leg
+        // è¨ˆç®—å›ºå®šè…¿ç¾å€¼
         double pvFixed = CalculateFixedLegPV(curve);
 
-        // ­pºâ Float Leg¡]Â²¤Æ¡G°²³]»P Zero Rate ¤@­P¡^
+        // è¨ˆç®—æµ®å‹•è…¿ç¾å€¼ (ç°¡åŒ–ï¼šå‡è¨­èˆ‡é›¶åˆ©ç‡ä¸€è‡´)
         double pvFloat = CalculateFloatLegPV(curve);
 
         // Par Swap: PV_Fixed = PV_Float
@@ -80,9 +74,8 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ Fixed Leg ²{­È
-    /// 
-    /// PV_Fixed = Notional * Fixed_Rate * £U[DF(Ti) * £ni]
+    /// è¨ˆç®—å›ºå®šè…¿ PV
+    /// PV_Fixed = Notional * Fixed_Rate * Î£[ DF(T_i) * Î”t_i ]
     /// </summary>
     private double CalculateFixedLegPV(IZeroCurve curve)
     {
@@ -100,9 +93,8 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ Float Leg ²{­È¡]Â²¤Æ¡^
-    /// 
-    /// PV_Float = Notional * [DF(T0) - DF(Tn)]
+    /// è¨ˆç®—æµ®å‹•è…¿ PV (ç°¡åŒ–å…¬å¼)
+    /// PV_Float = Notional * ( DF(T_0) - DF(T_n) )
     /// </summary>
     private double CalculateFloatLegPV(IZeroCurve curve)
     {
@@ -113,19 +105,19 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ²£¥Í¥I´Ú®É¶¡ªí
+    /// ç”¢ç”Ÿæ”¯ä»˜æœŸæ—¥èˆ‡å°æ‡‰å¹´åŒ–æœŸé–“ (Î”t_i)
     /// </summary>
     private IEnumerable<(DateTime PaymentDate, double YearFraction)> GeneratePaymentSchedule()
     {
         int totalPeriods = (int)(Tenor * PaymentFrequency);
-        double periodLength = 1.0 / PaymentFrequency;
+        _ = 1.0 / PaymentFrequency;
 
         for (int i = 1; i <= totalPeriods; i++)
         {
             DateTime prevDate = StartDate.AddDays((i - 1) * 365.0 / PaymentFrequency);
             DateTime paymentDate = StartDate.AddDays(i * 365.0 / PaymentFrequency);
 
-            // ½Õ¾ã¦Ü¤u§@¤é
+            // èª¿æ•´è‡³ç‡Ÿæ¥­æ—¥
             paymentDate = DayCountCalculator.AdjustToBusinessDay(paymentDate);
 
             double yearFraction = DayCountCalculator.YearFraction(prevDate, paymentDate, DayCount);
@@ -135,9 +127,7 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ­pºâ Annuity¡]¦~ª÷¦]¤l¡^
-    /// 
-    /// Annuity = £U[DF(Ti) * £ni]
+    /// è¨ˆç®—å¹´é‡‘å› å­ Annuity = Î£[ DF(T_i) * Î”t_i ]
     /// </summary>
     public double CalculateAnnuity(IZeroCurve curve)
     {
@@ -153,14 +143,12 @@ public sealed class SwapInstrument : MarketInstrument
     }
 
     /// <summary>
-    /// ±q Par Swap Rate ¤Ï±À³Ì«á¤@´Áªº DF
-    /// 
-    /// ¤½¦¡¡G
-    /// DF(Tn) = [DF(T0) - Swap_Rate * £U(DF(Ti) * £ni)] / (1 + Swap_Rate * £nn)
+    /// ç”±å¹³åƒ¹äº¤æ›åˆ©ç‡æ¨å°æœŸæœ«æŠ˜ç¾å› å­ DF(T_n)
+    /// æ¨å°ï¼šDF(T_n) = [ DF(T_0) - Swap_Rate * Î£_{i=1}^{n-1}( DF(T_i) * Î”t_i ) ] / ( 1 + Swap_Rate * Î”t_n )
     /// </summary>
     public double CalculateImpliedDiscountFactor(IZeroCurve existingCurve)
     {
-        // ­pºâ¤wª¾´Á­­ªº Annuity¡]±Æ°£³Ì«á¤@´Á¡^
+        // è¨ˆç®—å·²çŸ¥æœŸæ¬¡çš„éƒ¨åˆ†å¹´é‡‘å› å­ (ä¸å«æœ€å¾Œä¸€æœŸ)
         var schedule = GeneratePaymentSchedule().ToList();
         double knownAnnuity = 0.0;
 
@@ -171,18 +159,18 @@ public sealed class SwapInstrument : MarketInstrument
             knownAnnuity += df * yearFraction;
         }
 
-        // ³Ì«á¤@´Á
-        var (lastDate, lastFraction) = schedule[^1];
+        // æœ€å¾Œä¸€æœŸè³‡è¨Š
+        var (_, lastFraction) = schedule[^1];
         double df0 = existingCurve.GetDiscountFactor(StartDate);
 
-        // DF(Tn) = [DF(T0) - Swap_Rate * Known_Annuity] / (1 + Swap_Rate * £nn)
+        // DF(T_n) = [ DF(T_0) - Swap_Rate * Known_Annuity ] / ( 1 + Swap_Rate * Î”t_n )
         double dfn = (df0 - MarketQuote * knownAnnuity) / (1.0 + MarketQuote * lastFraction);
 
         return dfn;
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç Swap
+    /// å»ºç«‹æ¨™æº–åŒ– Swap åˆç´„ (ä»¥ tenor å»ºæœŸ)
     /// </summary>
     public static SwapInstrument Create(
         DateTime startDate,

@@ -1,58 +1,58 @@
 namespace DciCalculator.Models;
 
 /// <summary>
-/// ¥«³õ¼Æ¾Ú§Ö·Ó
-/// ¾ã¦X©Ò¦³ DCI ©w»ù©Ò»İªº¥«³õ¸ê°T
+/// å¸‚å ´è³‡æ–™å¿«ç…§ (Market Data Snapshot)
+/// å°è£å»ºç«‹ DCI æ‰€éœ€çš„æ ¸å¿ƒå³æ™‚/å»¶é²å¸‚å ´è³‡è¨Šã€‚
 /// 
-/// ¥Î³~¡G
-/// - ²Î¤@ºŞ²z¥«³õ¼Æ¾Ú¨Ó·½
-/// - ÅçÃÒ¼Æ¾Ú§¹¾ã©Ê©M·sÂA«×
-/// - ´£¨Ñ§Ö·Ó®É¶¡ÂW°O
+/// åŠŸèƒ½ç”¨é€”:
+/// - ä½œç‚ºå–®ä¸€ä¾†æºæä¾›å ±åƒ¹èˆ‡åƒæ•¸
+/// - æ”¯æ´åŸºæœ¬è³‡æ–™æª¢æ ¸èˆ‡æ™‚æ•ˆåˆ¤æ–·
+/// - çµ±ä¸€æ™‚é–“æˆ³è¨˜æ ¼å¼ (UTC)
 /// </summary>
 public sealed record MarketDataSnapshot
 {
     /// <summary>
-    /// §Ö·Ó®É¶¡ÂW°O¡]UTC¡^
+    /// å»ºç«‹æ™‚é–“æˆ³ (UTC)
     /// </summary>
     public DateTime TimestampUtc { get; init; }
 
     /// <summary>
-    /// ³f¹ô¹ï¡]¨Ò¦p "USD/TWD"¡^
+    /// å¹£åˆ¥è²¨å¹£å° (ä¾‹å¦‚ "USD/TWD")
     /// </summary>
     public string CurrencyPair { get; init; }
 
     /// <summary>
-    /// Spot ¶×²v³ø»ù¡]Bid/Ask/Mid¡^
+    /// ç¾è²¨å ±åƒ¹ (Bid / Ask / Mid)
     /// </summary>
     public FxQuote SpotQuote { get; init; }
 
     /// <summary>
-    /// ¥»¹ô§Q²v¡]¦~¤Æ¡^
+    /// æœ¬å¹£å¹´åŒ–åˆ©ç‡ (Domestic Rate)
     /// </summary>
     public double RateDomestic { get; init; }
 
     /// <summary>
-    /// ¥~¹ô§Q²v¡]¦~¤Æ¡^
+    /// å¤–å¹£å¹´åŒ–åˆ©ç‡ (Foreign Rate)
     /// </summary>
     public double RateForeign { get; init; }
 
     /// <summary>
-    /// FX ªi°Ê«×¡]¦~¤Æ¡^
+    /// éš±å«æ³¢å‹•ç‡ (Implied Volatility)
     /// </summary>
     public double Volatility { get; init; }
 
     /// <summary>
-    /// Forward Points¡]¿ï¥Î¡A¥i±q§Q²v±Àºâ¡^
+    /// é æœŸé»æ•¸ (Forward Points)ï¼Œå¯ç”±åˆ©ç‡å·®æ¨å¾—
     /// </summary>
     public decimal? ForwardPoints { get; init; }
 
     /// <summary>
-    /// ¼Æ¾Ú¨Ó·½¡]¨Ò¦p "Bloomberg", "Reuters"¡^
+    /// è³‡æ–™ä¾†æº (ä¾‹å¦‚ "Bloomberg", "Reuters")
     /// </summary>
     public string? DataSource { get; init; }
 
     /// <summary>
-    /// ¬O§_¬°§Y®É¼Æ¾Ú
+    /// æ˜¯å¦ç‚ºå³æ™‚è³‡æ–™
     /// </summary>
     public bool IsRealTime { get; init; }
 
@@ -68,7 +68,7 @@ public sealed record MarketDataSnapshot
         
         if (volatility <= 0 || volatility > 5.0)
             throw new ArgumentOutOfRangeException(nameof(volatility),
-                "ªi°Ê«×¥²¶·¦b (0, 5.0] ½d³ò¤º");
+                "æ³¢å‹•ç‡å¿…é ˆä½æ–¼ (0, 5.0] å€é–“å…§");
 
         CurrencyPair = currencyPair;
         SpotQuote = spotQuote;
@@ -80,7 +80,7 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// ÀË¬d¼Æ¾Ú¬O§_¹L´Á¡]¶W¹L«ü©w¬í¼Æ¡^
+    /// åˆ¤æ–·è³‡æ–™æ˜¯å¦éæœŸ (è¶…éæŒ‡å®šç§’æ•¸)
     /// </summary>
     public bool IsStale(int maxAgeSeconds = 60)
     {
@@ -89,7 +89,8 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// ­pºâ Forward ¶×²v¡]°ò©ó§Q²v¥­»ù¡^
+    /// è¨ˆç®—é æœŸåŒ¯ç‡ Forward (æ ¹æ“šåˆ©ç‡å¹³åƒ¹é—œä¿‚)
+    /// Forward = Spot * exp((r_dom - r_for) * T)
     /// </summary>
     public decimal CalculateForward(double tenorInYears)
     {
@@ -102,7 +103,7 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// ­pºâ Forward Points
+    /// è¨ˆç®—é æœŸé»æ•¸ (Forward - Spot)
     /// </summary>
     public decimal CalculateForwardPoints(double tenorInYears)
     {
@@ -111,38 +112,38 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// ÅçÃÒ¼Æ¾Ú§¹¾ã©Ê
+    /// é©—è­‰å¸‚å ´è³‡æ–™åˆç†æ€§ä¸¦å›å‚³éŒ¯èª¤é›†åˆ
     /// </summary>
     public MarketDataValidationResult Validate()
     {
         var errors = new List<string>();
 
-        // Spot ÀË¬d
+        // Spot åŸºæœ¬æª¢æ ¸
         if (SpotQuote.Bid <= 0 || SpotQuote.Ask <= 0)
-            errors.Add("Spot Bid/Ask ¥²¶· > 0");
+            errors.Add("Spot Bid/Ask å¿…é ˆ > 0");
 
         if (SpotQuote.Bid >= SpotQuote.Ask)
-            errors.Add($"Spot Bid ({SpotQuote.Bid}) ¥²¶· < Ask ({SpotQuote.Ask})");
+            errors.Add($"Spot Bid ({SpotQuote.Bid}) å¿…é ˆ < Ask ({SpotQuote.Ask})");
 
         decimal spread = SpotQuote.Ask - SpotQuote.Bid;
         decimal spreadPercent = spread / SpotQuote.Mid;
-        if (spreadPercent > 0.01m) // 1% spread Äµ§i
-            errors.Add($"Spot Spread ¹L¤j: {spreadPercent:P2}");
+        if (spreadPercent > 0.01m) // 1% spread ä¸Šé™
+            errors.Add($"Spot Spread éå¤§: {spreadPercent:P2}");
 
-        // §Q²vÀË¬d
+        // åˆ©ç‡ç¯„åœæª¢æ ¸
         if (RateDomestic < -0.20 || RateDomestic > 0.50)
-            errors.Add($"¥»¹ô§Q²v²§±`: {RateDomestic:P2}");
+            errors.Add($"æœ¬å¹£åˆ©ç‡ç•°å¸¸: {RateDomestic:P2}");
 
         if (RateForeign < -0.20 || RateForeign > 0.50)
-            errors.Add($"¥~¹ô§Q²v²§±`: {RateForeign:P2}");
+            errors.Add($"å¤–å¹£åˆ©ç‡ç•°å¸¸: {RateForeign:P2}");
 
-        // ªi°Ê«×ÀË¬d
+        // æ³¢å‹•ç‡ç¯„åœæª¢æ ¸
         if (Volatility < 0.01 || Volatility > 2.0)
-            errors.Add($"ªi°Ê«×²§±`: {Volatility:P2}");
+            errors.Add($"æ³¢å‹•ç‡ç•°å¸¸: {Volatility:P2}");
 
-        // ®É®Ä©ÊÀË¬d
-        if (IsStale(maxAgeSeconds: 300)) // 5 ¤ÀÄÁ
-            errors.Add($"¼Æ¾Ú¹L´Á: {(DateTime.UtcNow - TimestampUtc).TotalMinutes:F1} ¤ÀÄÁ«e");
+        // æ–°é®®åº¦/æ™‚æ•ˆæª¢æ ¸
+        if (IsStale(maxAgeSeconds: 300)) // 5 åˆ†é˜
+            errors.Add($"è³‡æ–™éæœŸ: {(DateTime.UtcNow - TimestampUtc).TotalMinutes:F1} åˆ†é˜å‰");
 
         return new MarketDataValidationResult(
             IsValid: errors.Count == 0,
@@ -151,7 +152,7 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// «Ø¥ß DciInput¡]¤è«KÂà´«¡^
+    /// è½‰æ›ç‚º DciInput (å®šåƒ¹æ‰€éœ€è¼¸å…¥çµæ§‹)
     /// </summary>
     public DciInput ToDciInput(
         decimal notionalForeign,
@@ -172,7 +173,7 @@ public sealed record MarketDataSnapshot
     }
 
     /// <summary>
-    /// «Ø¥ß´ú¸Õ/¼ÒÀÀ¼Æ¾Ú
+    /// å»ºç«‹æ¨¡æ“¬/æ¸¬è©¦ç”¨å¿«ç…§
     /// </summary>
     public static MarketDataSnapshot CreateMock(
         string currencyPair = "USD/TWD",
@@ -202,7 +203,7 @@ public sealed record MarketDataSnapshot
 }
 
 /// <summary>
-/// ¥«³õ¼Æ¾ÚÅçÃÒµ²ªG
+/// å¸‚å ´è³‡æ–™é©—è­‰çµæœ
 /// </summary>
 public sealed record MarketDataValidationResult(
     bool IsValid,

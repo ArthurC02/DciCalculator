@@ -1,473 +1,375 @@
-# DCI Pricing Engine ¡V ¶}µo»¡©ú¤å¥ó (.NET 8 / C#)
+# DCI Pricing Engine â€“ é–‹ç™¼æŠ€è¡“ç¸½è¦½ (.NET 8 / C#)
 
-¥»¤å¥ó¬O **DCI¡]Dual Currency Investment, Âù¹ô§ë¸ê¡^** ³ø»ù»P­pºâ¤ÞÀºªº§¹¾ã¶}µo»¡©ú¡C
+æœ¬å°ˆæ¡ˆå®šä½ç‚º **DCIï¼ˆDual Currency Investmentï¼Œé›™å¹£æŠ•è³‡ï¼‰** å ±åƒ¹èˆ‡é¢¨éšªåˆ†æžå¼•æ“Žï¼Œæä¾›å®šåƒ¹ã€Greeksã€æƒ…å¢ƒåˆ†æžèˆ‡æƒ…å¢ƒçµæžœï¼ˆScenarioï¼‰è¼¸å‡ºã€‚
 
-> **»y¨¥**: C# 12.0  
+> **èªžè¨€**: C# 12.0  
 > **Framework**: .NET 8  
-> **³]­p­ì«h**: Domain ª«¥ó + ­pºâ¼Ò²Õ¤ÀÂ÷¡Aª÷ÃB/¶×²v¨Ï¥Î `decimal`¡Aª÷¿Ä¼Ò«¬¨Ï¥Î `double`
+> **è¨­è¨ˆå“²å­¸**: Domain æ¨¡åž‹ + é«˜æ•ˆè¨ˆç®—ï¼›é‡‘é¡/åŒ¯çŽ‡ä½¿ç”¨ `decimal`ï¼Œçµ±è¨ˆ/æ•¸å€¼é‹ç®—ä½¿ç”¨ `double`
 
 ---
 
-## 1. ±M®×·§­z
+## 1. åŠŸèƒ½æ¦‚è¿°
 
-### 1.1 ®Ö¤ß¥\¯à
+### 1.1 æ ¸å¿ƒæ¨¡çµ„
 
-? **¤w¹ê²{¥\¯à**¡G
+1. **æœŸæ¬Šå®šåƒ¹**  
+   - Black-Scholesï¼ˆè‚¡æ¬Š / ä¸€èˆ¬æœŸæ¬Šï¼‰  
+   - Garman-Kohlhagenï¼ˆFX æœŸæ¬Šï¼‰  
+   - éš±å«æ³¢å‹•çŽ‡åæŽ¨ï¼ˆNewtonâ€‘Raphsonï¼‰  
+   - æ¥µç«¯æƒ…å¢ƒè™•ç†ï¼ˆDeep ITM / OTMï¼‰
+2. **Greeks è¨ˆç®—**ï¼šDelta / Gamma / Vega / Theta / Rho  
+3. **DCI ç‰¹åŒ–é‚è¼¯**ï¼šå­˜æ¬¾åˆ©æ¯ + æœŸæ¬Šæº¢åƒ¹çµ„åˆã€Coupon è¨ˆç®—ã€Knock-In payoffã€èˆ‡æ¨™æº–å­˜æ¬¾æ¯”è¼ƒ  
+4. **å¸‚å ´è³‡æ–™è™•ç†**ï¼šSpot Bid/Ask/Midã€Forward è¨ˆç®—ã€Forward Points / Pipsã€åŸºç¤Žå¹´åŒ–è™•ç†  
+5. **å»¶ä¼¸è¨ˆç•«ï¼ˆç ”æ“¬ä¸­ï¼‰**ï¼šMargin èª¿æ•´ã€Strike Solver å¼·åŒ–ã€Day Count Convention å®Œæ•´æ”¯æŒã€å¤–éƒ¨å¸‚å ´å¿«ç…§ã€æƒ…å¢ƒçµæžœè¦–è¦ºåŒ–
 
-1. **´ÁÅv©w»ù¤ÞÀº**
-   - Black-Scholes ¼Ú¦¡´ÁÅv©w»ù¡]ªÑ²¼/«ü¼Æ¡^
-   - Garman-Kohlhagen FX ´ÁÅv©w»ù
-   - Áô§tªi°Ê«×­pºâ¡]Newton-Raphson ¤èªk¡^
-   - ¼Æ­ÈÃ­©w©ÊÀu¤Æ¡]Deep ITM/OTM ³B²z¡^
+### 1.2 è¨­è¨ˆæº–å‰‡
 
-2. **Greeks ­·ÀI«ü¼Ð**
-   - Delta¡]»ù®æ±Ó·P«×¡^
-   - Gamma¡]Delta ÅÜ¤Æ²v¡^
-   - Vega¡]ªi°Ê«×±Ó·P«×¡^
-   - Theta¡]®É¶¡°I´î¡^
-   - Rho¡]§Q²v±Ó·P«×¡A¥»¹ô/¥~¹ô¡^
+- ç²¾åº¦ï¼šé‡‘é¡èˆ‡åŒ¯çŽ‡å››ä½å°æ•¸ï¼ˆå¿…è¦æ™‚å¯æ“´å……ï¼‰  
+- å…§è¯ï¼šé©åº¦ä½¿ç”¨ `MethodImplOptions.AggressiveInlining`  
+- é‚Šç•Œï¼šåš´æ ¼é©—è­‰è¼¸å…¥ï¼ˆè² å€¼ã€é›¶å€¼ã€NaNï¼‰  
+- é«˜å¯æ¸¬æ€§ï¼š100% é‡å°å…¬é–‹é‚è¼¯å¯è¦†è“‹  
+- å¯æ“´å……ï¼šä»¥ç´”å‡½å¼èˆ‡ Immutable æ¨¡åž‹ç‚ºä¸»
 
-3. **DCI ®Ö¤ß­pºâ**
-   - DCI ³ø»ù¤ÞÀº¡]©w¦s§Q®§ + ´ÁÅv§Q®§¡^
-   - ¦~¤Æ¦¬¯q²v¡]Coupon¡^­pºâ
-   - ¨ì´Á Payoff ­pºâ¡]Knock-In §PÂ_¡^
-   - ¬ÕÁ«¤ÀªR¡]vs. ³æ¯Â©w¦s¡^
+### 1.3 å¾ŒçºŒå»¶ä¼¸ï¼ˆéœ€æ±‚æ± ï¼‰
 
-4. **¥«³õ¼Æ¾Ú¤u¨ã**
-   - Spot Bid/Ask/Mid ³B²z
-   - Forward ¶×²v­pºâ¡]§Q²v¥­»ù²z½×¡^
-   - Forward Points / Pips Âà´«
-   - §é²{¦]¤l­pºâ
-
-5. **¶i¶¥¥\¯à**¡]¥»¦¸·s¼W¡^
-   - ? Margin ¥[¦¨­pºâ¡]»È¦æ§Q¼í¡^
-   - ? Strike Solver¡]¤Ï±À¥Ø¼Ð Coupon¡^
-   - ? Day Count Convention¡]¤é´Á­pºâ¡^
-   - ? ¥«³õ¼Æ¾Ú§Ö·Ó¡]¾ã¦X©w»ù¿é¤J¡^
-   - ? ±¡¹Ò¤ÀªR¡]±Ó·P«×´ú¸Õ¡^
-
-### 1.2 ³]­p¥Ø¼Ð
-
-- ? **°ªºë«×**¡Gª÷ÃB­pºâºë½T¨ì¤p¼ÆÂI«á²Ä 4 ¦ì
-- ? **°ª®Ä¯à**¡GAggressiveInlining + ¹s heap ¤À°t
-- ? **¼Æ­ÈÃ­©w**¡G³B²z·¥ºÝ°Ñ¼Æ©MÃä¬É±ø¥ó
-- ? **¥i´ú¸Õ©Ê**¡G100% ³æ¤¸´ú¸ÕÂÐ»\²v
-- ? **¥iÂX®i©Ê**¡G¼Ò²Õ¤Æ³]­p¡A©ö©ó¥[¤J·s¥\¯à
-
-### 1.3 «D¥Ø¼Ð¡]¼È¤£¹ê²{¡^
-
-- ? Trade Lifecycle ºÞ²z¡]booking¡Bamend¡Bcancel¡^
-- ? Vol Surface Bootstrapping¡]¨Ï¥Î Flat Vol¡^
-- ? Exotic µ²ºc¡]Snowball¡BRange Accrual¡BAutocall¡^
-- ? CVA/DVA/FVA ½Õ¾ã¡]«H¥Î©M¸êª÷¦¨¥»¡^
+- Trade Lifecycleï¼ˆbooking / amend / cancelï¼‰  
+- Vol Surface Bootstrappingï¼ˆç”±å¸‚å ´é»žå»ºæ§‹ï¼‰  
+- Exotic çµæ§‹ï¼ˆSnowball / Range Accrual / Autocallï¼‰  
+- CVA/DVA/FVA åˆæ­¥æ¡†æž¶
 
 ---
 
-## 2. ª÷¿Ä·§©À»P³N»y
+## 2. DCI çµæ§‹èˆ‡åè©ž
 
-### 2.1 DCI µ²ºc
+### 2.1 DCI å®šç¾©
 
-**DCI¡]Dual Currency Investment¡^** = ¥~¹ô©w¦s + ½æ¥X FX Put ´ÁÅv
+**DCI = å¤–å¹£å­˜æ¬¾ï¼ˆæœ¬é‡‘ + å­˜æ¬¾åˆ©æ¯ï¼‰ + è³£å‡ºä¸€æžš FX Putï¼ˆæ”¶å–æœŸæ¬Šæº¢åƒ¹ï¼‰**
 
 ```
-«È¤á¦æ¬°¡G
-- §ë¤J¥»ª÷¡G10,000 USD
-- Strike¡G30.00 TWD/USD¡]²¤§C©ó Spot 30.50¡^
-- ´Á­­¡G90 ¤Ñ
-
-¨ì´Áµ²ªG¡G
-[±¡¹Ò 1] Spot ? 30.00 ¡÷ »â¦^ 10,000 USD + °ª§Q®§¡]¦~¤Æ 8%¡^
-[±¡¹Ò 2] Spot < 30.00 ¡÷ ¥H 30.00 ³Q­¢Âà´«¦¨ 300,000 TWD + §Q®§
+æµç¨‹ç¤ºæ„ï¼š
+1. è¼¸å…¥ï¼šNotional 10,000 USDï¼›Spot = 30.50ï¼›Strike = 30.00ï¼›Tenor = 90 å¤©
+2. çµæžœï¼š
+   [æƒ…å¢ƒ 1] åˆ°æœŸ Spot â‰¥ 30.00 â†’ å–å›ž 10,000 USD + å­˜æ¬¾åˆ©æ¯ï¼ˆä¾‹ï¼š8% å¹´åŒ–æŠ˜ç®—ï¼‰
+   [æƒ…å¢ƒ 2] åˆ°æœŸ Spot < 30.00 â†’ ä»¥ Strike äº¤å‰²æˆç­‰å€¼ TWDï¼ˆStrike * Notionalï¼‰+ åˆ©æ¯
 ```
 
-**¦¬¯q¨Ó·½**¡G
-- ©w¦s§Q®§¡G°òÂ¦§Q²v¡]¨Ò¦p 3%¡^
-- ´ÁÅv§Q®§¡G½æ¥X Put ´ÁÅvªº Premium §éºâ¡]¨Ò¦p 5%¡^
-- Á` Coupon¡G8%¡]©w¦s 3% + ´ÁÅv 5%¡^
+**æ”¶ç›Šçµ„æˆ**ï¼š
 
-### 2.2 ÃöÁä³N»y
+- å­˜æ¬¾åˆ©æ¯ï¼ˆä¾‹ï¼š3%ï¼‰  
+- æœŸæ¬Šæº¢åƒ¹ï¼ˆPut Premiumï¼Œä¾‹ï¼š5%ï¼‰  
+- å¹´åŒ– Coupon â‰ˆ å­˜æ¬¾ + æœŸæ¬Šæº¢åƒ¹
 
-| ³N»y | »¡©ú | «¬§O |
+### 2.2 ä¸»è¦æ¬„ä½
+
+| æ¬„ä½ | èªªæ˜Ž | åž‹åˆ¥ |
 |------|------|------|
-| **Notional** | §ë¸ê¥»ª÷¡]¥~¹ô¡^ | `decimal` |
-| **Spot** | §Y´Á¶×²v¡]Bid/Ask/Mid¡^ | `decimal` |
-| **Strike** | ¼i¬ù»ù¡]¶×²v¡^ | `decimal` |
-| **Forward** | »·´Á¶×²v¡]°ò©ó§Q²v¥­»ù¡^ | `decimal` |
-| **Coupon** | ¦~¤Æ¦¬¯q²v | `double` |
-| **Volatility** | ¦~¤Æªi°Ê«× | `double` |
-| **Tenor** | ´Á­­¡]¦~¡^ | `double` |
-| **Margin** | »È¦æ§Q¼í¥[¦¨¡]pips ©Î %¡^ | `decimal` |
-| **Greeks** | ­·ÀI±Ó·P«×«ü¼Ð | `double` |
+| Notional | å¤–å¹£æœ¬é‡‘ | `decimal` |
+| Spot | ç¾è²¨åŒ¯çŽ‡ï¼ˆBid / Ask / Midï¼‰ | `decimal` |
+| Strike | å¥‘ç´„å±¥ç´„åƒ¹ | `decimal` |
+| Forward | æœŸé™é æœŸåŒ¯çŽ‡ | `decimal` |
+| Coupon | å¹´åŒ–ç¶œåˆæ”¶ç›ŠçŽ‡ | `double` |
+| Volatility | å¹´åŒ–æ³¢å‹•çŽ‡ | `double` |
+| Tenor | å¹´é™ï¼ˆå¹´ï¼‰ | `double` |
+| Margin | èª¿æ•´ï¼ˆpips æˆ– %ï¼‰ | `decimal` |
+| Greeks | é¢¨éšªæ•æ„Ÿåº¦ | `double` |
 
-### 2.3 Bid/Ask/Mid ·§©À
+### 2.3 Bid / Ask / Mid
 
 ```
-¥«³õ³ø»ù¡G
-Bid: 30.48  ¡ö »È¦æÄ@·N¶R USD ªº»ù®æ¡]«È¤á½æ USD¡^
-Ask: 30.52  ¡ö »È¦æÄ@·N½æ USD ªº»ù®æ¡]«È¤á¶R USD¡^
-Mid: 30.50  ¡ö ²z½×¤¤¶¡»ù¡]©w»ù°ò·Ç¡^
+ç¯„ä¾‹ï¼š
+Bid: 30.48 â†’ å¯è³£å‡º USD æ›å¾— TWD
+Ask: 30.52 â†’ å¯è²·å…¥ USD æ”¯ä»˜ TWD
+Mid: 30.50 â†’ ä¼°åƒ¹ä¸­é–“åƒ¹
 
-©w»ùÅÞ¿è¡G
-- ²z½×»ù¨Ï¥Î Mid
-- ¹ï«È³ø»ù®Ú¾Ú¤è¦V½Õ¾ã¡]+ Bid/Ask Spread + Margin¡^
+ç­–ç•¥ï¼šæ¨¡åž‹ä¼°åƒ¹ä»¥ Mid ç‚ºä¸»ï¼›å ±åƒ¹å°å®¢æˆ¶å†åŠ ä¸Š Spread + Marginã€‚
 ```
 
 ---
 
-## 3. «¬§O»Pºë«×µ¦²¤
+## 3. åž‹åˆ¥èˆ‡ç²¾åº¦ç­–ç•¥
 
-### 3.1 «¬§O¿ï¾Ü­ì«h
+### 3.1 åˆ†é¡žæ‘˜è¦
 
-| ¥Î³~ | «¬§O | ­ì¦] |
+| é¡žåˆ¥ | èªªæ˜Ž | å‚™è¨» |
 |------|------|------|
-| ¶×²v¡Bª÷ÃB¡B§Q®§ | `decimal` | Á×§K¯BÂI»~®t¡Aºë½T¨ì 4 ¦ì¤p¼Æ |
-| ¼Æ¾Ç¼Ò«¬­pºâ | `double` | °ª®Ä²v¡A¤ä´© Math.* ¨ç¼Æ |
-| ªi°Ê«×¡BGreeks | `double` | ¼Æ¾Ç¼Ò«¬¿é¥X |
-| ¤ñ²v¡B¦Ê¤À¤ñ | `double` | ³q±`¥Î©ó­pºâ¡A«D³Ì²×ª÷ÃB |
+| é‡‘é¡ / åŒ¯çŽ‡ / æœŸæ¬Šåƒ¹æ ¼ | `decimal` | å››ä½æˆ–å¿…è¦é€²ä½ |
+| æ•¸å€¼çµ±è¨ˆ / æŒ‡æ•¸ / CDF | `double` | ä½¿ç”¨ `Math.*` |
+| æ³¢å‹•çŽ‡ / Greeks | `double` | æ•¸å€¼çµæžœ |
+| åˆ©çŽ‡ / æ—¥æ•¸æ›ç®— | `double` | åŸºæ–¼é€£çºŒæˆ–å–®åˆ© |
 
-### 3.2 Âà´«³W«h
+### 3.2 è½‰æ›ç¯„ä¾‹
 
 ```csharp
-// ? ¤¹³\¡Gdecimal ¡÷ double¡]¶i¤J¼Ò«¬¼h¡^
+// decimal â†’ doubleï¼ˆé«˜æ–¯ CDFï¼‰
 double spotD = (double)spotDecimal;
 double price = GarmanKohlhagen.PriceFxOption(spotD, ...);
 
-// ? ¤¹³\¡Gdouble ¡÷ decimal¡]¦^¨ìª÷ÃB¼h¡A¥|±Ë¤­¤J¡^
-decimal result = Math.Round((decimal)priceD, 4, MidpointRounding.AwayFromZero);
+// double â†’ decimalï¼ˆå±•ç¤ºå››ä½ç²¾åº¦ï¼‰
+decimal shown = Math.Round((decimal)price, 4, MidpointRounding.AwayFromZero);
 
-// ? ¸T¤î¡Gª÷ÃB­pºâª½±µ¥Î double
-double amount = 10000.0 * 0.1;  // ¿ù»~¡IÀ³¸Ó¥Î decimal
+// é‡‘é¡è¨ˆç®—ä¿æŒ decimal
+decimal interest = notional * (decimal)couponRate;
 ```
 
-### 3.3 ºë«×­n¨D
+### 3.3 ç²¾åº¦éœ€æ±‚
 
-- **¶×²vºë«×**¡G¤p¼ÆÂI«á²Ä 4 ¦ì¡]¨Ò¦p 30.5000¡^
-- **ª÷ÃBºë«×**¡G¤p¼ÆÂI«á²Ä 4 ¦ì¡]¨Ò¦p 1,234.5678 USD¡^
-- **§Q²vºë«×**¡G¤p¼ÆÂI«á²Ä 4 ¦ì¡]¨Ò¦p 0.0515 = 5.15%¡^
-- **Greeks ºë«×**¡G¤p¼ÆÂI«á²Ä 6 ¦ì
+- Spotï¼šå››ä½ï¼ˆä¾‹ï¼š30.5000ï¼‰  
+- é‡‘é¡ï¼šå››ä½ï¼ˆä¾‹ï¼š1,234.5678 USDï¼‰  
+- åˆ©çŽ‡ï¼šå››ä½ï¼ˆä¾‹ï¼š0.0515 = 5.15%ï¼‰  
+- Greeksï¼šå…­ä½æˆ–æ›´å¤šè¦–éœ€æ±‚
 
 ---
 
-## 4. ±M®×¬[ºc
+## 4. å°ˆæ¡ˆçµæ§‹
 
-### 4.1 ¥Ø¿ýµ²ºc
+### 4.1 ç›®éŒ„
 
 ```
 DciCalculator/
-¢u¢w¢w Algorithms/                    # ®Ö¤ßºtºâªk
-¢x   ¢u¢w¢w MathFx.cs                 # ¼Æ¾Ç¨ç¼Æ¡]Normal CDF/PDF, Discount Factor¡^
-¢x   ¢u¢w¢w BlackScholes.cs           # Black-Scholes ©w»ù
-¢x   ¢u¢w¢w GarmanKohlhagen.cs        # Garman-Kohlhagen FX ©w»ù
-¢x   ¢u¢w¢w GreeksCalculator.cs       # Greeks ­pºâ
-¢x   ¢u¢w¢w MarginCalculator.cs       # Margin ¥[¦¨­pºâ
-¢x   ¢u¢w¢w StrikeSolver.cs           # Strike ¤Ï±À¨D¸Ñ¾¹
-¢x   ¢|¢w¢w DayCountCalculator.cs     # Day Count Convention
-¢x
-¢u¢w¢w Models/                        # Domain ª«¥ó
-¢x   ¢u¢w¢w OptionType.cs             # Call/Put ¦CÁ|
-¢x   ¢u¢w¢w FxQuote.cs                # Spot Bid/Ask/Mid
-¢x   ¢u¢w¢w DciInput.cs               # DCI ¿é¤J°Ñ¼Æ
-¢x   ¢u¢w¢w DciQuoteResult.cs         # DCI ³ø»ùµ²ªG
-¢x   ¢u¢w¢w DciPayoffResult.cs        # DCI ¨ì´Á¦^³ø
-¢x   ¢u¢w¢w GreeksResult.cs           # Greeks µ²ªG
-¢x   ¢u¢w¢w MarketDataSnapshot.cs     # ¥«³õ¼Æ¾Ú§Ö·Ó
-¢x   ¢|¢w¢w ScenarioResult.cs         # ±¡¹Ò¤ÀªRµ²ªG
-¢x
-¢u¢w¢w Calculators/                   # ­pºâ¾¹
-¢x   ¢u¢w¢w DciPricer.cs              # DCI ¥D³ø»ù¤ÞÀº
-¢x   ¢u¢w¢w DciPayoffCalculator.cs    # ¨ì´Á Payoff ­pºâ
-¢x   ¢|¢w¢w ScenarioAnalyzer.cs       # ±¡¹Ò¤ÀªR
-¢x
-¢|¢w¢w Docs/
-    ¢|¢w¢w DCI.md                     # ¥»¤å¥ó
+  Algorithms/          # æ ¸å¿ƒç®—æ³•
+    MathFx.cs          # Normal CDF/PDF, Discount Factor
+    BlackScholes.cs    # Black-Scholes å®šåƒ¹
+    GarmanKohlhagen.cs # Garman-Kohlhagen FX å®šåƒ¹
+    GreeksCalculator.cs# Greeks è¨ˆç®—
+    MarginCalculator.cs# Margin èª¿æ•´
+    StrikeSolver.cs    # Strike åæ±‚
+    DayCountCalculator.cs # æ—¥æ•¸æ›ç®—
+
+  Models/              # Domain æ¨¡åž‹
+    OptionType.cs
+    FxQuote.cs
+    DciInput.cs
+    DciQuoteResult.cs
+    DciPayoffResult.cs
+    GreeksResult.cs
+    MarketDataSnapshot.cs
+    ScenarioResult.cs
+
+  Calculators/         # èšåˆé‚è¼¯
+    DciPricer.cs
+    DciPayoffCalculator.cs
+    ScenarioAnalyzer.cs
+
+  Docs/
+    DCI.md
 
 DciCalculator.Tests/
-¢u¢w¢w BlackScholesTests.cs           # Black-Scholes ´ú¸Õ¡]21 ­Ó´ú¸Õ¡^
-¢u¢w¢w GarmanKohlhagenTests.cs        # Garman-Kohlhagen ´ú¸Õ¡]11 ­Ó´ú¸Õ¡^
-¢u¢w¢w MarginCalculatorTests.cs       # Margin ´ú¸Õ
-¢u¢w¢w StrikeSolverTests.cs           # Strike Solver ´ú¸Õ
-¢|¢w¢w DciPricerTests.cs              # DCI ¾ã¦X´ú¸Õ
+  BlackScholesTests.cs
+  GarmanKohlhagenTests.cs
+  MarginCalculatorTests.cs
+  StrikeSolverTests.cs
+  ï¼ˆå…¶é¤˜å¾…æ“´å……ï¼‰
 ```
 
-### 4.2 ®Ö¤ßÃþ§O»¡©ú
-
-#### 4.2.1 ´ÁÅv©w»ù
+### 4.2 é‡è¦ä»‹é¢æ‘˜è¦
 
 **BlackScholes.cs**
-```csharp
-public static double Price(
-    double spot, double strike, double rate,
-    double volatility, double timeToMaturity,
-    OptionType optionType);
 
-public static double ImpliedVolatility(
-    double marketPrice, double spot, double strike,
-    double rate, double timeToMaturity,
-    OptionType optionType, double initialGuess = 0.3);
+```csharp
+double Price(double spot, double strike, double rate,
+             double volatility, double timeToMaturity,
+             OptionType optionType);
+
+double ImpliedVolatility(double marketPrice, double spot, double strike,
+                         double rate, double timeToMaturity,
+                         OptionType optionType, double initialGuess = 0.3);
 ```
 
 **GarmanKohlhagen.cs**
+
 ```csharp
-public static double PriceFxOption(
-    double spot, double strike,
-    double rDomestic, double rForeign,
-    double volatility, double timeToMaturity,
-    OptionType optionType);
-
-public static double ImpliedVolatility(...);
+double PriceFxOption(double spot, double strike,
+                     double rDomestic, double rForeign,
+                     double volatility, double timeToMaturity,
+                     OptionType optionType);
+double ImpliedVolatility(...);
 ```
-
-#### 4.2.2 DCI ­pºâ
 
 **DciPricer.cs**
+
 ```csharp
-public static DciQuoteResult Quote(DciInput input);
-public static DciQuoteResult QuoteWithMargin(
-    DciInput input, 
-    decimal marginPips);
-```
-
-**DciPayoffCalculator.cs**
-```csharp
-public static DciPayoffResult CalculatePayoff(
-    DciInput input,
-    DciQuoteResult quoteResult,
-    decimal spotAtMaturity);
-
-public static decimal CalculatePnLVsDeposit(
-    DciInput input,
-    DciPayoffResult payoffResult);
-```
-
-#### 4.2.3 ·s¼W¤u¨ã
-
-**MarginCalculator.cs**
-```csharp
-// ¥[¤W Margin¡]¥H pips ©Î¦Ê¤À¤ñ¡^
-public static decimal ApplyMarginPips(
-    decimal theoreticalPrice,
-    decimal marginPips,
-    decimal spot);
-
-public static decimal ApplyMarginPercent(
-    decimal theoreticalPrice,
-    decimal marginPercent);
+DciQuoteResult Quote(DciInput input);
+DciQuoteResult QuoteWithMargin(DciInput input, decimal marginPips);
 ```
 
 **StrikeSolver.cs**
+
 ```csharp
-// ¤Ï±À¹F¨ì¥Ø¼Ð Coupon ©Ò»Ýªº Strike
-public static decimal SolveStrike(
-    DciInput input,
-    double targetCoupon,
-    decimal strikeGuess);
+decimal SolveStrike(DciInput input, double targetCoupon, decimal strikeGuess);
 ```
 
 **DayCountCalculator.cs**
+
 ```csharp
-// ­pºâ¨â¤é´Á¶¡ªº¦~¤Æ´Á¶¡
-public static double YearFraction(
-    DateTime startDate,
-    DateTime endDate,
-    DayCountConvention convention);
+double YearFraction(DateTime startDate, DateTime endDate, DayCountConvention convention);
 ```
 
 ---
 
-## 5. ¨Ï¥Î½d¨Ò
+## 5. ä½¿ç”¨ç¯„ä¾‹
 
-### 5.1 °ò¥» DCI ³ø»ù
+### 5.1 å»ºç«‹è¼¸å…¥ä¸¦ä¼°åƒ¹
 
 ```csharp
-using DciCalculator;
-using DciCalculator.Models;
-
-// 1. «Ø¥ß¥«³õ¼Æ¾Ú
-var spotQuote = new FxQuote(Bid: 30.48m, Ask: 30.52m); // Mid = 30.50
-
-// 2. «Ø¥ß DCI ¿é¤J
+var spotQuote = new FxQuote(Bid: 30.48m, Ask: 30.52m); // Mid â‰ˆ 30.50
 var input = new DciInput(
-    NotionalForeign: 10_000m,        // 10,000 USD
+    NotionalForeign: 10_000m,
     SpotQuote: spotQuote,
-    Strike: 30.00m,                  // 30.00 TWD/USD
-    RateDomestic: 0.015,             // TWD 1.5%
-    RateForeign: 0.05,               // USD 5%
-    Volatility: 0.10,                // 10% vol
-    TenorInYears: 90.0 / 365.0,      // 90 ¤Ñ
-    DepositRateAnnual: 0.03          // ©w¦s 3%
-);
+    Strike: 30.00m,
+    RateDomestic: 0.015,
+    RateForeign: 0.05,
+    Volatility: 0.10,
+    TenorInYears: 90.0 / 365.0,
+    DepositRateAnnual: 0.03);
 
-// 3. ­pºâ³ø»ù
 var quote = DciPricer.Quote(input);
-
-// 4. ¿é¥Xµ²ªG
-Console.WriteLine($"¥»ª÷: {quote.NotionalForeign:N2} USD");
-Console.WriteLine($"©w¦s§Q®§: {quote.InterestFromDeposit:N4} USD");
-Console.WriteLine($"´ÁÅv§Q®§: {quote.InterestFromOption:N4} USD");
-Console.WriteLine($"Á`§Q®§: {quote.TotalInterestForeign:N4} USD");
-Console.WriteLine($"¦~¤Æ¦¬¯q²v: {quote.CouponAnnual:P2}");
+Console.WriteLine($"å¤–å¹£æœ¬é‡‘: {quote.NotionalForeign:N2} USD");
+Console.WriteLine($"å­˜æ¬¾åˆ©æ¯: {quote.InterestFromDeposit:N4} USD");
+Console.WriteLine($"æœŸæ¬Šæº¢åƒ¹: {quote.InterestFromOption:N4} USD");
+Console.WriteLine($"ç¸½æ”¶ç›Š: {quote.TotalInterestForeign:N4} USD");
+Console.WriteLine($"å¹´åŒ– Coupon: {quote.CouponAnnual:P2}");
 ```
 
-### 5.2 ¥[¤W Margin
+### 5.2 åŠ ä¸Š Margin
 
 ```csharp
-// ¥[¤W 10 pips ªº»È¦æ§Q¼í
 decimal marginPips = 10m;
-var quoteWithMargin = DciPricer.QuoteWithMargin(input, marginPips);
-
-Console.WriteLine($"­ì©l Coupon: {quote.CouponAnnual:P2}");
-Console.WriteLine($"¥[ Margin «á: {quoteWithMargin.CouponAnnual:P2}");
+var withMargin = DciPricer.QuoteWithMargin(input, marginPips);
+Console.WriteLine($"åŽŸå§‹ Coupon: {quote.CouponAnnual:P2}");
+Console.WriteLine($"èª¿æ•´å¾Œ Coupon: {withMargin.CouponAnnual:P2}");
 ```
 
-### 5.3 ¤Ï±À Strike
+### 5.3 åæ±‚ Strikeï¼ˆç›®æ¨™ Couponï¼‰
 
 ```csharp
-// ¥Ø¼Ð¡G¦~¤Æ¦¬¯q²v 8%
-double targetCoupon = 0.08;
-
-decimal optimalStrike = StrikeSolver.SolveStrike(
-    input, 
-    targetCoupon, 
-    strikeGuess: 30.00m
-);
-
-Console.WriteLine($"¹F¨ì 8% Coupon ©Ò»Ý Strike: {optimalStrike:F4}");
+double targetCoupon = 0.08; // 8%
+decimal optimalStrike = StrikeSolver.SolveStrike(input, targetCoupon, 30.00m);
+Console.WriteLine($"é”æˆ 8% Coupon çš„ Strike: {optimalStrike:F4}");
 ```
 
-### 5.4 ­pºâ Greeks
+### 5.4 Greeks
 
 ```csharp
 var greeks = GreeksCalculator.CalculateDciGreeks(input);
-
 Console.WriteLine($"Delta: {greeks.Delta:F6}");
 Console.WriteLine($"Gamma: {greeks.Gamma:F6}");
-Console.WriteLine($"Vega: {greeks.Vega:F6}");
-Console.WriteLine($"Theta (daily): {greeks.Theta:F6}");
+Console.WriteLine($"Vega : {greeks.Vega:F6}");
+Console.WriteLine($"Theta: {greeks.Theta:F6}");
 ```
 
-### 5.5 ±¡¹Ò¤ÀªR
+### 5.5 æƒ…å¢ƒåˆ†æž
 
 ```csharp
 var scenarios = ScenarioAnalyzer.Analyze(
     input,
-    spotShifts: new[] { -10m, -5m, 0m, 5m, 10m },  // ¡Ó10 pips
-    volShifts: new[] { -0.02, 0.0, 0.02 }          // ¡Ó2% vol
-);
+    spotShifts: new[] { -10m, -5m, 0m, 5m, 10m },
+    volShifts: new[] { -0.02, 0.00, 0.02 });
 
-foreach (var scenario in scenarios)
-{
-    Console.WriteLine(
-        $"Spot {scenario.SpotShift:+0;-0}: " +
-        $"Coupon {scenario.Coupon:P2}, " +
-        $"PnL {scenario.PnL:N2}"
-    );
-}
+foreach (var s in scenarios)
+    Console.WriteLine($"Spot Shift {s.SpotShift:+0;-0}: Coupon {s.Coupon:P2}, PnL {s.PnL:N2}");
 ```
 
 ---
 
-## 6. ®Ä¯à»Pºë«×«OÃÒ
+## 6. æ•ˆèƒ½èˆ‡å“è³ª
 
-### 6.1 ®Ä¯àÀu¤Æ
+### 6.1 æ•ˆèƒ½ç­–ç•¥
 
-- ? **¤èªk¤ºÁp**¡G`[MethodImpl(AggressiveInlining)]`
-- ? **¹s Heap ¤À°t**¡G¯Â stack ­pºâ
-- ? **®ø°£­«½Æ­pºâ**¡G§é²{¦]¤l¡Bsqrt(T) µ¥§Ö¨ú
-- ? **§Ö³t¸ô®|**¡GDeep ITM/OTM ´£«eªð¦^
-- ? **¼Æ­ÈÃ­©w©Ê**¡G³B²z·¥ºÝ°Ñ¼Æ¡]|d| > 20¡^
+- é©åº¦å…§è¯ï¼ˆCritical pathï¼‰
+- æ¸›å°‘è‡¨æ™‚é…ç½®ï¼ˆstack vs heapï¼‰
+- æ¥µç«¯å€¼è¿‘ä¼¼ï¼ˆ|d| > 20 â†’ CDFâ‰ˆ0 / 1ï¼‰
+- Deep ITM/OTM è¿‘ä¼¼ï¼šä»¥æŠ˜ç¾å…§å«åƒ¹å€¼
+- é‚Šç•Œåƒæ•¸å¿«å›žå‚³ / é¿å…è¿´åœˆ
 
-### 6.2 ºë«×ÅçÃÒ
+### 6.2 å“è³ªæª¢æ ¸
 
-- ? **Put-Call Parity**¡G32 ­Ó´ú¸Õ 100% ³q¹L
-- ? **Ãä¬É±ø¥ó**¡GNear maturity¡BZero vol¡BDeep ITM/OTM
-- ? **Áô§tªi°Ê«×**¡GNewton-Raphson ¦¬ÀÄ¦Ü 0.01%
-- ? **¶×²vºë«×**¡G©Ò¦³ª÷ÃB¥|±Ë¤­¤J¦Ü²Ä 4 ¦ì
-
----
-
-## 7. ÂX®i­p¹º
-
-### 7.1 µu´Á­p¹º¡]¤w¹ê²{¡^
-
-- ? Margin ­pºâ
-- ? Strike Solver
-- ? Day Count Convention
-- ? ¥«³õ¼Æ¾Ú§Ö·Ó
-- ? ±¡¹Ò¤ÀªR
-
-### 7.2 ¤¤´Á­p¹º
-
-- ? §Q²v¦±½u¡]Zero Curve + Interpolation¡^
-- ? Flat Vol Surface¡]¦h´Á­­ªi°Ê«×¡^
-- ? Business Day Calendar¡]°²¤é³B²z¡^
-- ? Trade ¥Í©R¶g´Á¡]Booking¡BValuation¡^
-
-### 7.3 ªø´Á­p¹º
-
-- ? KI/KO µ²ºc¡]Barrier DCI¡^
-- ? Vol Surface Bootstrapping
-- ? CVA/DVA ½Õ¾ã
-- ? Exotic µ²ºc¡]Snowball¡BAutocall¡^
+- Put-Call Parity å…¨è¦†è“‹å ´æ™¯  
+- Near maturity / Zero vol / Deep ITM/OTM è¡Œç‚º  
+- Implied Volatility æ”¶æ–‚ï¼ˆèª¤å·® < 0.01%ï¼‰  
+- Spot / Strike / Vol / Tenor è¼¸å…¥é©—è­‰  
+- FX å ´æ™¯ï¼ˆUSD/TWD 90 å¤©ï¼‰
 
 ---
 
-## 8. ´ú¸Õµ¦²¤
+## 7. æ¼”é€²è·¯ç·š
 
-### 8.1 ³æ¤¸´ú¸ÕÂÐ»\
+### 7.1 åŸºç¤Žï¼ˆçŸ­æœŸï¼‰
 
-- ? BlackScholesTests¡]21 ­Ó´ú¸Õ¡^
-- ? GarmanKohlhagenTests¡]11 ­Ó´ú¸Õ¡^
-- ? GreeksCalculatorTests
-- ? MarginCalculatorTests
-- ? StrikeSolverTests
-- ? DciPricerTests
+- Margin é‚è¼¯æ‹†åˆ†  
+- Strike Solver æ”¹è‰¯  
+- Day Count Convention å¢žè£œ  
+- å¸‚å ´å¿«ç…§æ“´å……  
+- æƒ…å¢ƒåˆ†æžè¼¸å‡ºæ ¼å¼
 
-### 8.2 ´ú¸ÕÃþ«¬
+### 7.2 é€²éšŽï¼ˆä¸­æœŸï¼‰
 
-1. **°ò¥»©w»ù´ú¸Õ**¡GATM/ITM/OTM Call/Put
-2. **Put-Call Parity**¡GÅçÃÒµL®M§Q
-3. **Ãä¬É±ø¥ó**¡GNear maturity¡BZero vol¡BDeep ITM/OTM
-4. **°Ñ¼ÆÅçÃÒ**¡G­t­È¡B·¥ºÝ­È¡BNaN/Infinity
-5. **Áô§tªi°Ê«×**¡G¤Ï±ÀÅçÃÒ
-6. **¹ê°È³õ´º**¡GUSD/TWD DCI 90 ¤Ñ´Á
+- Zero Curve + æ’å€¼  
+- Flat / Interpolated Vol Surface  
+- Business Day Calendar  
+- Trade Valuation  
 
----
+### 7.3 é«˜éšŽï¼ˆé•·æœŸï¼‰
 
-## 9. ±`¨£°ÝÃD
-
-### Q1: ¬°¦ó Spot ¥Î decimal ¦ý¼Ò«¬¥Î double¡H
-
-**A**: ª÷ÃB­pºâ»Ý­nºë½T¡]Á×§K 0.1+0.2¡Ú0.3¡^¡A¦ý¼Æ¾Ç¼Ò«¬¡]log/exp¡^¥u¯à¥Î double¡C§Ú­Ì¦bÃä¬É°µ«¬§OÂà´«¨Ã¥|±Ë¤­¤J¡C
-
-### Q2: Deep ITM/OTM ¦p¦ó³B²z¡H
-
-**A**: ·í |d1| > 20 ®É¡AN(d) ? 0 ©Î 1¡Aª½±µ¨Ï¥Îªñ¦ü¤½¦¡Á×§Kºë«×·l¥¢¡C
-
-### Q3: Margin ¦p¦ó¼vÅT³ø»ù¡H
-
-**A**: Margin ­°§C´ÁÅv»ù­È ¡÷ ­°§C´ÁÅv§Q®§ ¡÷ ­°§CÁ` Coupon¡C«È¤á¬Ý¨ìªº¬O¦©°£ Margin «áªº¦¬¯q²v¡C
-
-### Q4: Strike Solver ¦p¦ó¹B§@¡H
-
-**A**: ¨Ï¥Î Newton-Raphson ¤èªk¡A­¡¥N½Õ¾ã Strike ª½¨ì Coupon ¹F¨ì¥Ø¼Ð­È¡]ºë«× 0.01%¡^¡C
+- Barrier / KI / KO DCI  
+- Vol Surface Bootstrapping  
+- CVA / DVA  
+- Snowball / Autocall æ”¯æ´
 
 ---
 
-## 10. °Ñ¦Ò¸ê®Æ
+## 8. æ¸¬è©¦æ¦‚æ³
 
-### 10.1 ¾Ç³N¸ê·½
+### 8.1 è¦†è“‹ç›®æ¨™
+
+- BlackScholesTestsï¼ˆæœŸæ¬Šå®šåƒ¹ï¼‰  
+- GarmanKohlhagenTestsï¼ˆFX å®šåƒ¹ï¼‰  
+- GreeksCalculatorTests  
+- MarginCalculatorTests  
+- StrikeSolverTests  
+- DciPricerTests
+
+### 8.2 æ¸¬è©¦é¡žåž‹
+
+1. åŸºæœ¬å®šåƒ¹ï¼ˆATM / ITM / OTMï¼‰  
+2. Put-Call Parity  
+3. é‚Šç•Œè¡Œç‚ºï¼ˆNear maturity / Zero vol / Deep ITM/OTMï¼‰  
+4. ç•°å¸¸åƒæ•¸ï¼ˆè² å€¼ / NaN / Infinityï¼‰  
+5. éš±å«æ³¢å‹•çŽ‡åæŽ¨  
+6. FX å ´æ™¯ï¼ˆUSD/TWDï¼‰
+
+---
+
+## 9. å¸¸è¦‹å•ç­”
+
+**Q1: ç‚ºä½• Spot ç”¨ decimalï¼Œé‹ç®—æœ€å¾Œåˆè½‰ doubleï¼Ÿ**  
+A: é‡‘é¡èˆ‡åŒ¯çŽ‡ä¿æŒ decimal ç²¾åº¦ï¼›çµ±è¨ˆå‡½å¼ï¼ˆlog / exp / CDFï¼‰ä½¿ç”¨ double é¿å…æ€§èƒ½æå¤±ï¼Œè½‰æ›é›†ä¸­ä¸”å››æ¨äº”å…¥å¾Œå†è¼¸å‡ºã€‚  
+
+**Q2: Deep ITM/OTM å¦‚ä½•è™•ç†ï¼Ÿ**  
+A: |d1| > 20 æ™‚ CDF è¿‘ä¼¼ 0/1ï¼Œç›´æŽ¥å›žå‚³æŠ˜ç¾å…§å«åƒ¹å€¼æ¸›å°‘é‹ç®—ã€‚  
+
+**Q3: Margin å°æ”¶ç›Šçš„å½±éŸ¿ï¼Ÿ**  
+A: Coupon = å­˜æ¬¾åˆ©æ¯ + æœŸæ¬Šæº¢åƒ¹ï¼ˆå·²å« Spread + Marginï¼‰ï¼›Margin èª¿æ•´ä¸»è¦å½±éŸ¿å ±åƒ¹å±¤çš„æœ€çµ‚æ”¶ç›Šã€‚  
+
+**Q4: Strike Solver æ”¶æ–‚æ©Ÿåˆ¶ï¼Ÿ**  
+A: ä½¿ç”¨ Newtonâ€‘Raphsonï¼›èª¤å·® < 0.01% æ™‚åœæ­¢ï¼Œå¿…è¦æ™‚å¯é€€å›žå€é–“äºŒåˆ†ã€‚  
+
+---
+
+## 10. åƒè€ƒè³‡æ–™
+
+### 10.1 å­¸è¡“
 
 - Hull, J. C. (2018). *Options, Futures, and Other Derivatives* (10th ed.)
 - Garman, M. B., & Kohlhagen, S. W. (1983). *Foreign Currency Option Values*
 
-### 10.2 ¹ê°È¸ê·½
+### 10.2 å¯¦å‹™
 
-- Bloomberg OVML¡]Option Valuation Models¡^
-- CME FX Options Specifications
-- ISDA Definitions¡]§Q²v©M¥~¶×¡^
+- Bloomberg OVML (Option Valuation Models)  
+- CME FX Options Specs  
+- ISDA Definitionsï¼ˆåˆ©çŽ‡èˆ‡å¤–åŒ¯ï¼‰
 
 ---
 
-**¤å¥óª©¥»**: 2.0  
-**³Ì«á§ó·s**: 2024  
-**ºûÅ@ªÌ**: DCI Pricing Engine Team
+**ç‰ˆæœ¬**: 2.0  
+**æœ€å¾Œæ›´æ–°**: 2024  
+**ç¶­è­·åœ˜éšŠ**: DCI Pricing Engine Team

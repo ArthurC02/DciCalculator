@@ -4,13 +4,13 @@ using DciCalculator.Models;
 namespace DciCalculator;
 
 /// <summary>
-/// ´ÁÅv Greeks ­pºâ¾¹¡]°ò©ó Garman-Kohlhagen ¼Ò«¬¡^
-/// ´£¨Ñ Delta¡BGamma¡BVega¡BTheta¡BRho µ¥­·ÀI«ü¼Ğ
+/// å¤–åŒ¯é¸æ“‡æ¬Š Greeks è¨ˆç®—å™¨ï¼ˆæ¡ç”¨ Garman-Kohlhagen æ¨¡å‹ï¼‰
+/// æä¾› Deltaã€Gammaã€Vegaã€Thetaã€Rho ç­‰é¢¨éšªæ•æ„Ÿåº¦è¨ˆç®—ã€‚
 /// </summary>
 public static class GreeksCalculator
 {
     /// <summary>
-    /// ­pºâ FX ´ÁÅvªº©Ò¦³ Greeks
+    /// è¨ˆç®—å–®ä¸€ FX é¸æ“‡æ¬Šå…¨éƒ¨ Greeksï¼ˆä½¿ç”¨ Garman-Kohlhagenï¼‰ã€‚
     /// </summary>
     public static GreeksResult CalculateGreeks(
         double spot,
@@ -42,7 +42,7 @@ public static class GreeksCalculator
         double nd2 = MathFx.NormalCdf(d2);
         double npd1 = MathFx.NormalPdf(d1);
 
-        // Delta: ´ÁÅv»ù®æ¹ï§Y´Á¶×²vªº±Ó·P«×
+        // Delta: åƒ¹æ ¼å°æ¨™çš„å³æœŸåŒ¯ç‡å¾®å°è®Šå‹•çš„æ•æ„Ÿåº¦
         double delta = optionType switch
         {
             OptionType.Call => dfForeign * nd1,
@@ -50,13 +50,13 @@ public static class GreeksCalculator
             _ => throw new ArgumentOutOfRangeException(nameof(optionType))
         };
 
-        // Gamma: Delta ¹ï§Y´Á¶×²vªº±Ó·P«×¡]¤G¶¥¾É¼Æ¡^
+        // Gamma: Delta å°å³æœŸåŒ¯ç‡å†åº¦å¾®å°è®Šå‹•çš„äºŒéšæ•æ„Ÿåº¦
         double gamma = (dfForeign * npd1) / (spot * volSqrtT);
 
-        // Vega: ´ÁÅv»ù®æ¹ïªi°Ê«×ªº±Ó·P«×¡]³q±`¥H 1% ªi°Ê«×ÅÜ¤Æ­p¡^
+        // Vega: åƒ¹æ ¼å°éš±å«æ³¢å‹•ç‡è®Šå‹•çš„æ•æ„Ÿåº¦ï¼ˆæ³¢å‹•ç‡ä¸Šå‡ 1% æ™‚çš„è¿‘ä¼¼åƒ¹æ ¼æ”¹è®Šï¼‰
         double vega = spot * dfForeign * npd1 * sqrtT / 100.0;
 
-        // Theta: ´ÁÅv»ù®æ¹ï®É¶¡¬y³uªº±Ó·P«×¡]¨C¤é¡^
+        // Theta: åƒ¹æ ¼å°å‰©é¤˜æ™‚é–“æµé€çš„æ•æ„Ÿåº¦ï¼ˆæ¯æ—¥æ™‚é–“åƒ¹å€¼è€—æï¼‰
         double theta = optionType switch
         {
             OptionType.Call => CalculateCallTheta(
@@ -67,10 +67,10 @@ public static class GreeksCalculator
                 timeToMaturity, dfDomestic, dfForeign, d1, d2, npd1, nd1, nd2),
             _ => throw new ArgumentOutOfRangeException(nameof(optionType))
         };
-        // Âà´«¬°¨C¤é Theta
+        // æ›ç®—ç‚ºæ¯æ—¥ Theta
         theta /= 365.0;
 
-        // Rho (Domestic): ´ÁÅv»ù®æ¹ï¥»¹ô§Q²vªº±Ó·P«×
+        // Rho (Domestic): åƒ¹æ ¼å°æœ¬åœ‹åˆ©ç‡è®Šå‹•çš„æ•æ„Ÿåº¦
         double rhoDomestic = optionType switch
         {
             OptionType.Call => -strike * timeToMaturity * dfDomestic * nd2 / 100.0,
@@ -78,7 +78,7 @@ public static class GreeksCalculator
             _ => throw new ArgumentOutOfRangeException(nameof(optionType))
         };
 
-        // Rho (Foreign): ´ÁÅv»ù®æ¹ï¥~¹ô§Q²vªº±Ó·P«×
+        // Rho (Foreign): åƒ¹æ ¼å°å¤–åœ‹åˆ©ç‡è®Šå‹•çš„æ•æ„Ÿåº¦
         double rhoForeign = optionType switch
         {
             OptionType.Call => -spot * timeToMaturity * dfForeign * nd1 / 100.0,
@@ -123,14 +123,14 @@ public static class GreeksCalculator
     }
 
     /// <summary>
-    /// ­pºâ DCI ²£«~ªº Greeks¡]¦Ò¼{½æ¥X Put ªº­·ÀI¡^
+    /// è¨ˆç®— DCI å•†å“ä¹‹ Greeksï¼ˆè€ƒé‡è³£å‡º Put çš„éƒ¨ä½æ–¹å‘ï¼‰ã€‚
     /// </summary>
     public static GreeksResult CalculateDciGreeks(DciInput input)
     {
         double spotD = (double)input.SpotQuote.Mid;
         double strikeD = (double)input.Strike;
 
-        // DCI ³q±`¬O½æ¥X Put¡A©Ò¥H Greeks »İ­n¨ú¤Ï¸¹
+        // DCI çµæ§‹å±¬è³£å‡º Putï¼ŒGreeks éœ€èª¿æ•´ç‚ºåå‘
         var putGreeks = CalculateGreeks(
             spot: spotD,
             strike: strikeD,
@@ -141,7 +141,7 @@ public static class GreeksCalculator
             optionType: OptionType.Put
         );
 
-        // ½æ¥X Put ªº Greeks = -1 * ¶R¤J Put ªº Greeks
+        // è³£å‡º Put ä¹‹ Greeks = -1 * è²·å…¥ Put ä¹‹ Greeks
         return new GreeksResult(
             Delta: -putGreeks.Delta,
             Gamma: -putGreeks.Gamma,

@@ -5,14 +5,14 @@ using Xunit;
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// Garman-Kohlhagen FX ´ÁÅv¼Ò«¬³æ¤¸´ú¸Õ
-/// ÅçÃÒ FX ´ÁÅv©w»ùªº·Ç½T©Ê©M¼Æ­ÈÃ­©w©Ê
+/// Garman-Kohlhagen FX æœŸæ¬Šå®šåƒ¹æ¸¬è©¦ã€‚
+/// é©—è­‰å…¬å¼æ–¼è²¼ç¾èˆ‡æ³¢å‹•ç‡è¼¸å…¥çš„æ­£ç¢ºæ€§èˆ‡å¤šç¨®æƒ…å¢ƒè¡Œç‚ºã€‚
 /// </summary>
 public class GarmanKohlhagenTests
 {
     private const double Tolerance = 1e-4;
 
-    #region °ò¥»©w»ù´ú¸Õ
+    #region åŸºæœ¬å®šåƒ¹æ¡ˆä¾‹
 
     [Fact]
     public void PriceFxOption_ATMCall_ReturnsCorrectValue()
@@ -29,9 +29,9 @@ public class GarmanKohlhagenTests
         double price = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: »ù®æÀ³¸Ó > 0
+        // Assert: åˆç†åƒ¹æ ¼ > 0
         Assert.True(price > 0);
-        Assert.True(price < spot); // ²z©ÊÀË¬d
+        Assert.True(price < spot); // ä¸è¶…éç¾è²¨
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class GarmanKohlhagenTests
 
     #endregion
 
-    #region Put-Call Parity (FX ª©¥»)
+    #region Put-Call Parity (FX é©—è­‰)
 
     [Theory]
     [InlineData(30.50, 31.00, 0.015, 0.05, 0.10, 0.25)]
@@ -83,7 +83,7 @@ public class GarmanKohlhagenTests
 
     #endregion
 
-    #region Ãä¬É±ø¥ó´ú¸Õ
+    #region é‚Šç•Œèˆ‡æ¥µç«¯æƒ…å¢ƒ
 
     [Fact]
     public void PriceFxOption_DeepITMCall_ReturnsCorrectValue()
@@ -100,7 +100,7 @@ public class GarmanKohlhagenTests
         double price = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ¬ùµ¥©ó S*e^(-r_f*T) - K*e^(-r_d*T)
+        // Assert: Deep ITM ç†è«–è¿‘ä¼¼ S*e^(-r_f*T) - K*e^(-r_d*T)
         double expected = spot * Math.Exp(-rForeign * timeToMaturity)
                         - strike * Math.Exp(-rDomestic * timeToMaturity);
 
@@ -122,33 +122,33 @@ public class GarmanKohlhagenTests
         double price = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, volatility, timeToMaturity, OptionType.Put);
 
-        // Assert: ¬ùµ¥©ó 0
+        // Assert: Deep OTM æ¥è¿‘ 0
         Assert.InRange(price, 0.0, 0.01);
     }
 
     [Fact]
     public void PriceFxOption_NearMaturity_ReturnsIntrinsicValue()
     {
-        // Arrange: §Y±N¨ì´Á
+        // Arrange: å³å°‡åˆ°æœŸ
         double spot = 31.00;
         double strike = 30.00;
         double rDomestic = 0.015;
         double rForeign = 0.05;
         double volatility = 0.10;
-        double timeToMaturity = 1.0 / (365.0 * 24.0); // 1 ¤p®É
+        double timeToMaturity = 1.0 / (365.0 * 24.0); // 1 å°æ™‚
 
         // Act
         double callPrice = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, volatility, timeToMaturity, OptionType.Call);
 
-        // Assert: ¬ùµ¥©ó¤º§t»ù­È
+        // Assert: åƒ¹æ ¼è²¼è¿‘å…§å«åƒ¹å€¼
         double intrinsic = Math.Max(0, spot - strike);
         Assert.Equal(intrinsic, callPrice, precision: 1);
     }
 
     #endregion
 
-    #region °Ñ¼ÆÅçÃÒ´ú¸Õ
+    #region åƒæ•¸é©—è­‰èˆ‡ç•°å¸¸
 
     [Fact]
     public void PriceFxOption_NegativeSpot_ThrowsException()
@@ -173,7 +173,7 @@ public class GarmanKohlhagenTests
 
     #endregion
 
-    #region Áô§tªi°Ê«×´ú¸Õ
+    #region éš±å«æ³¢å‹•ç‡åæ¨
 
     [Fact]
     public void ImpliedVolatility_KnownPrice_RecoversVolatility()
@@ -199,27 +199,27 @@ public class GarmanKohlhagenTests
 
     #endregion
 
-    #region DCI ¹ê°È³õ´º´ú¸Õ
+    #region DCI å ´æ™¯é©—è­‰
 
     [Fact]
     public void PriceFxOption_DciScenario_ReturnsReasonablePrice()
     {
-        // Arrange: ¨å«¬ DCI °Ñ¼Æ¡]90 ¤Ñ¡A²¤§C©ó§Y´Áªº Strike¡^
-        double spot = 30.50;          // ·í«e USD/TWD
-        double strike = 30.00;        // Strike ²¤§C¡]«È¤á·PÄ±¦w¥ş¡^
+        // Arrange: DCI å…¸å‹è¼¸å…¥ (90 å¤©ã€Strike æ¥è¿‘ç¾è²¨)
+        double spot = 30.50;          // ç¾è²¨ USD/TWD
+        double strike = 30.00;        // Strike æ¥è¿‘ç¾è²¨
         double rDomestic = 0.015;     // TWD 1.5%
         double rForeign = 0.05;       // USD 5%
         double volatility = 0.10;     // 10% vol
         double timeToMaturity = 90.0 / 365.0;
 
-        // Act: ­pºâ Put ´ÁÅv»ù®æ¡]DCI ½æ¥X Put¡^
+        // Act: è¨ˆç®— Put åƒ¹æ ¼ (DCI çµæ§‹ä½¿ç”¨ Put)
         double putPrice = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, volatility, timeToMaturity, OptionType.Put);
 
-        // Assert: »ù®æÀ³¸Ó¦b¦X²z½d³ò¡]0.1 ~ 0.5 TWD per 1 USD¡^
+        // Assert: åˆç†åƒ¹æ ¼ä»‹æ–¼ 0.05 ~ 0.80 TWD per USD
         Assert.InRange(putPrice, 0.05, 0.80);
 
-        // ÅçÃÒºë«×
+        // å››æ¨äº”å…¥é©—è­‰
         double rounded = Math.Round(putPrice, 4);
         Assert.Equal(rounded, putPrice, precision: 4);
     }
@@ -234,14 +234,14 @@ public class GarmanKohlhagenTests
         double rForeign = 0.05;
         double timeToMaturity = 90.0 / 365.0;
 
-        // Act: ¤ñ¸û¤£¦Pªi°Ê«×
+        // Act: æ¯”è¼ƒä¸åŒæ³¢å‹•ç‡
         double priceLowVol = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, 0.05, timeToMaturity, OptionType.Put);
 
         double priceHighVol = GarmanKohlhagen.PriceFxOption(
             spot, strike, rDomestic, rForeign, 0.20, timeToMaturity, OptionType.Put);
 
-        // Assert: °ªªi°Ê«× ¡÷ °ª»ù®æ
+        // Assert: é«˜æ³¢å‹•ç‡åƒ¹æ ¼ > ä½æ³¢å‹•ç‡åƒ¹æ ¼
         Assert.True(priceHighVol > priceLowVol);
     }
 

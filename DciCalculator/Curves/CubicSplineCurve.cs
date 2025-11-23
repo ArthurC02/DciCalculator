@@ -4,27 +4,27 @@ using DciCalculator.Models;
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¤T¦¸¼Ë±ø´¡­È¹s®§¦±½u¡]Cubic Spline Interpolation¡^
-/// ¨Ï¥Î¦ÛµMÃä¬É±ø¥óªº¤T¦¸¼Ë±ø¶i¦æ´¡­È
+/// ä¸‰æ¬¡æ¨£æ¢æ’å€¼åˆ©ç‡æ›²ç·š (Cubic Spline Interpolation)
+/// ä½¿ç”¨è‡ªç„¶é‚Šç•Œæ¢ä»¶çš„ä¸‰æ¬¡æ¨£æ¢å¹³æ»‘åˆ©ç‡ç¯€é»ã€‚
 /// 
-/// ÀuÂI¡G
-/// - ¦±½u§ó¥­·Æ¡]¤@¶¥©M¤G¶¥¾É¼Æ³sÄò¡^
-/// - Á×§K½u©Ê´¡­Èªº¡u§éÂI¡v
-/// - §ó²Å¦X¹ê°È¥«³õ¦±½u§Îª¬
+/// ç‰¹æ€§ï¼š
+/// - é€£çºŒä¸€éšèˆ‡äºŒéšå°æ•¸ (å¹³æ»‘)
+/// - å¯é¿å…éåº¦éœ‡ç›ªçš„æ’å€¼è¡Œç‚º
+/// - è‡ªç„¶é‚Šç•Œï¼šå…©ç«¯ç¬¬äºŒå°æ•¸ = 0
 /// 
-/// ¦ÛµMÃä¬É±ø¥ó¡G
-/// - ¦±½u¨âºİªº¤G¶¥¾É¼Æ¬° 0
+/// ç›®çš„ï¼š
+/// åœ¨çµ¦å®šé›¢æ•£ Tenor/ZeroRate ç¯€é»ä¸‹ï¼Œç”Ÿæˆå¹³æ»‘ä¸”å¯å¾®çš„é›¶åˆ©ç‡æ›²ç·šï¼Œæ–¹ä¾¿å–å¾—ä¸­é–“æœŸé™åˆ©ç‡ã€æŠ˜ç¾å› å­èˆ‡é æœŸåˆ©ç‡ã€‚
 /// </summary>
 public sealed class CubicSplineCurve : IZeroCurve
 {
     private readonly CurvePoint[] _points;
-    private readonly double[] _secondDerivatives; // ¤G¶¥¾É¼Æ¡]«Y¼Æ¡^
+    private readonly double[] _secondDerivatives; // ç¬¬äºŒå°æ•¸ (æ¨£æ¢ç¯€é»è™•çš„äºŒéšå°æ•¸å€¼)
 
     public string CurveName { get; }
     public DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// «Ø¥ß¤T¦¸¼Ë±ø´¡­È¦±½u
+    /// å»ºç«‹ä¸‰æ¬¡æ¨£æ¢åˆ©ç‡æ›²ç·š
     /// </summary>
     public CubicSplineCurve(
         string curveName,
@@ -37,28 +37,29 @@ public sealed class CubicSplineCurve : IZeroCurve
         CurveName = curveName;
         ReferenceDate = referenceDate;
 
-        // ±Æ§Ç¨ÃÅçÃÒ¸`ÂI
+        // æ’åºç¯€é» (ä¾ Tenor ç”±å°åˆ°å¤§)
         _points = points.OrderBy(p => p.Tenor).ToArray();
 
         if (_points.Length < 3)
-            throw new ArgumentException("¤T¦¸¼Ë±ø¦Ü¤Ö»İ­n 3 ­Ó¸`ÂI", nameof(points));
+            throw new ArgumentException("ä¸‰æ¬¡æ¨£æ¢è‡³å°‘éœ€è¦ 3 å€‹ç¯€é»", nameof(points));
 
-        // ÅçÃÒ©Ò¦³¸`ÂI
+        // é©—è­‰æ‰€æœ‰ç¯€é»
         for (int i = 0; i < _points.Length; i++)
         {
             if (!_points[i].IsValid())
-                throw new ArgumentException($"¸`ÂI {i} µL®Ä: {_points[i]}");
+                throw new ArgumentException($"ç¯€é» {i} ç„¡æ•ˆ: {_points[i]}");
 
             if (i > 0 && Math.Abs(_points[i].Tenor - _points[i - 1].Tenor) < 1e-10)
-                throw new ArgumentException($"Tenor ­«½Æ: {_points[i].Tenor}");
+                throw new ArgumentException($"Tenor é‡è¤‡: {_points[i].Tenor}");
         }
 
-        // ­pºâ¤T¦¸¼Ë±ø«Y¼Æ
+        // è¨ˆç®—ä¸‰æ¬¡æ¨£æ¢ç¬¬äºŒå°æ•¸
         _secondDerivatives = ComputeSecondDerivatives();
     }
 
     /// <summary>
-    /// ­pºâ¤T¦¸¼Ë±øªº¤G¶¥¾É¼Æ¡]¨Ï¥Î Thomas ºtºâªk¨D¸Ñ¤T¹ï¨¤¯x°}¡^
+    /// è¨ˆç®—æ¨£æ¢ç¯€é»ç¬¬äºŒå°æ•¸é™£åˆ— (æ¡è‡ªç„¶æ¨£æ¢é‚Šç•Œæ¢ä»¶, å…©ç«¯äºŒéšå°æ•¸=0)
+    /// ä½¿ç”¨è§£ä¸‰å°è§’ç·šç³»çµ±çš„ Thomas æ³•ã€‚
     /// </summary>
     private double[] ComputeSecondDerivatives()
     {
@@ -67,20 +68,20 @@ public sealed class CubicSplineCurve : IZeroCurve
 
         if (n == 2)
         {
-            // ¥u¦³¨â­ÓÂI¡A°h¤Æ¬°½u©Ê
+            // è‹¥åƒ…å…©ç¯€é»å‰‡é€€åŒ–ç‚ºç·šæ€§æ’å€¼ (äºŒéšå°æ•¸=0)
             y2[0] = 0;
             y2[1] = 0;
             return y2;
         }
 
-        // ¨Ï¥Î¦ÛµMÃä¬É±ø¥ó¡]ºİÂI¤G¶¥¾É¼Æ = 0¡^
+        // è‡ªç„¶é‚Šç•Œæ¢ä»¶ï¼šç«¯é»äºŒéšå°æ•¸ = 0
         double[] u = new double[n - 1];
 
-        // ³]©wÃä¬É±ø¥ó
+        // åˆå§‹åŒ–é¦–ç«¯
         y2[0] = 0;
         u[0] = 0;
 
-        // ¦V«e®ø¤¸
+        // å‰è¡Œæ¶ˆå»
         for (int i = 1; i < n - 1; i++)
         {
             double sig = (_points[i].Tenor - _points[i - 1].Tenor) /
@@ -98,10 +99,10 @@ public sealed class CubicSplineCurve : IZeroCurve
             u[i] = (6.0 * (dy1 - dy0) / (_points[i + 1].Tenor - _points[i - 1].Tenor) - sig * u[i - 1]) / p;
         }
 
-        // ³]©w¥kÃä¬É±ø¥ó
+        // è¨­å®šå°¾ç«¯äºŒéšå°æ•¸ (è‡ªç„¶é‚Šç•Œ)
         y2[n - 1] = 0;
 
-        // ¦^¥N¨D¸Ñ
+        // å›ä»£æ±‚è§£
         for (int i = n - 2; i >= 0; i--)
         {
             y2[i] = y2[i] * y2[i + 1] + u[i];
@@ -115,22 +116,22 @@ public sealed class CubicSplineCurve : IZeroCurve
     {
         ArgumentOutOfRangeException.ThrowIfNegative(timeInYears);
 
-        // Ãä¬É±¡ªp¡G¥~±À
+        // å·¦å´å¤–æ’: è‹¥æŸ¥è©¢æœŸé™ < æœ€å° Tenorï¼Œå›å‚³ç¬¬ä¸€ç¯€é»åˆ©ç‡
         if (timeInYears <= _points[0].Tenor)
             return _points[0].ZeroRate;
 
         if (timeInYears >= _points[^1].Tenor)
             return _points[^1].ZeroRate;
 
-        // §ä¨ì´¡­È°Ï¶¡
+        // äºŒåˆ†æœå°‹æ‰¾åˆ°æ‰€åœ¨å€é–“ç´¢å¼•
         int index = FindIntervalIndex(timeInYears);
 
-        // ¤T¦¸¼Ë±ø´¡­È
+        // ä¸‰æ¬¡æ¨£æ¢æ’å€¼
         return InterpolateCubicSpline(timeInYears, index);
     }
 
     /// <summary>
-    /// ¤T¦¸¼Ë±ø´¡­È¤½¦¡
+    /// ä¸‰æ¬¡æ¨£æ¢æ’å€¼æ ¸å¿ƒè¨ˆç®—
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double InterpolateCubicSpline(double t, int index)
@@ -162,7 +163,7 @@ public sealed class CubicSplineCurve : IZeroCurve
     public double GetZeroRate(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         double timeInYears = (date - ReferenceDate).Days / 365.0;
         return GetZeroRate(timeInYears);
@@ -171,7 +172,7 @@ public sealed class CubicSplineCurve : IZeroCurve
     public double GetDiscountFactor(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         double timeInYears = (date - ReferenceDate).Days / 365.0;
         return GetDiscountFactor(timeInYears);
@@ -183,14 +184,16 @@ public sealed class CubicSplineCurve : IZeroCurve
         ArgumentOutOfRangeException.ThrowIfNegative(endTime);
 
         if (endTime <= startTime)
-            throw new ArgumentException("µ²§ô®É¶¡¥²¶· > °_©l®É¶¡");
+            throw new ArgumentException("çµæŸæ™‚é–“å¿…é ˆå¤§æ–¼èµ·å§‹æ™‚é–“");
 
-        double r1 = GetZeroRate(startTime);
-        double r2 = GetZeroRate(endTime);
+        // é æœŸåˆ©ç‡å…¬å¼ï¼šf(T1,T2) = [r(T2)*T2 - r(T1)*T1] / (T2 - T1)
+        // ä¾†æºï¼šé€£çºŒè¤‡åˆ©é›¶åˆ©ç‡ä¹‹ç„¡å¥—åˆ©é—œä¿‚
+        // r(T) ç‚ºå¹´åŒ–é›¶åˆ©ç‡ (continuous compounding)
+        double r1 = GetZeroRate(startTime); // èµ·å§‹é»é›¶åˆ©ç‡ r(T1)
+        double r2 = GetZeroRate(endTime);   // çµæŸé»é›¶åˆ©ç‡ r(T2)
 
         double forwardRate = (r2 * endTime - r1 * startTime) / (endTime - startTime);
-
-        return forwardRate;
+        return forwardRate; // è¿”å›å¹´åŒ–é æœŸåˆ©ç‡
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -227,7 +230,7 @@ public sealed class CubicSplineCurve : IZeroCurve
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç´Á­­¦±½u¡]´ú¸Õ¥Î¡^
+    /// å»ºç«‹æ¨™æº–åŒ–æ¨£æ¢æ›²ç·š (ç¤ºä¾‹ç”¨é è¨­ç¯€é»)
     /// </summary>
     public static CubicSplineCurve CreateStandardCurve(
         string curveName,

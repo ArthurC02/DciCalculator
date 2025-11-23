@@ -1,12 +1,12 @@
 namespace DciCalculator.Models;
 
 /// <summary>
-/// DCI ¨ì´Á¦^³ø­pºâµ²ªG
+/// DCI å ±é…¬çµæœ (Knock-In èˆ‡æœ€çµ‚è´–å›é‡‘é¡è³‡è¨Š)
 /// </summary>
 public sealed record DciPayoffResult(
-    bool IsKnockedIn,          // ¬O§_³Q¼i¬ù¡]¶×²v¶^¯} Strike¡^
-    decimal PayoffForeign,     // ¥~¹ô¦^³ø¡]­Y¥¼³Q¼i¬ù¡^
-    decimal PayoffDomestic,    // ¥»¹ô¦^³ø¡]­Y³Q¼i¬ù¡^
-    decimal FinalSpot,         // ¨ì´Á®Éªº§Y´Á¶×²v
-    decimal Strike             // ¼i¬ù»ù
+    bool IsKnockedIn,          // æ˜¯å¦å·² Knock-In (æ˜¯å¦è§¸åŠéšœç¤™/é–€æª» Strike)
+    decimal PayoffForeign,     // å¤–å¹£ç«¯æœ€çµ‚è´–å›é‡‘é¡ (è§¸ç™¼æ¢ä»¶å¾Œè¨ˆç®—)
+    decimal PayoffDomestic,    // æœ¬å¹£ç«¯æœ€çµ‚è´–å›é‡‘é¡ (å…Œæ›æˆ–ä¿åº•æ©Ÿåˆ¶)
+    decimal FinalSpot,         // æœ€çµ‚è§€å¯ŸåŒ¯ç‡ (åˆ°æœŸæ™‚ Spot)
+    decimal Strike             // éšœç¤™/å±¥ç´„åƒ¹ Strike
 );

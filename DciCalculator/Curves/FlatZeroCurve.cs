@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 namespace DciCalculator.Curves;
 
 /// <summary>
-/// ¥­©Z¹s®§¦±½u¡]Flat Zero Curve¡^
-/// ©Ò¦³´Á­­¨Ï¥Î¬Û¦P§Q²v
+/// å¹³å¦é›¶åˆ©ç‡æ›²ç·š (Flat Zero Curve)
+/// æ‰€æœ‰æœŸé™å…±ç”¨åŒä¸€é›¶åˆ©ç‡ã€‚
 /// 
-/// ¥Î³~¡G
-/// - ¦V«á¬Û®e¡]´À¥N³æ¤@§Q²v°Ñ¼Æ¡^
-/// - Â²¤Æ³õ´º´ú¸Õ
-/// - ¬y°Ê©Ê¸û®tªº¥«³õ
+/// ç‰¹æ€§ï¼š
+/// - åˆå§‹åŒ–å¿«é€Ÿ (åƒ…ä¸€å€‹åˆ©ç‡åƒæ•¸)
+/// - é©åˆæ¸¬è©¦æˆ–è³‡æ–™ç¨€ç–æƒ…å¢ƒ
+/// - ä¸åæ˜ æœŸé™çµæ§‹æ–œç‡
 /// </summary>
 public sealed class FlatZeroCurve : IZeroCurve
 {
@@ -19,18 +19,18 @@ public sealed class FlatZeroCurve : IZeroCurve
     public DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// «Ø¥ß¥­©Z¹s®§¦±½u
+    /// å»ºç«‹å¹³å¦é›¶åˆ©ç‡æ›²ç·š
     /// </summary>
-    /// <param name="curveName">¦±½u¦WºÙ¡]¨Ò¦p "USD", "TWD"¡^</param>
-    /// <param name="referenceDate">°ò·Ç¤é´Á</param>
-    /// <param name="flatRate">©T©w§Q²v¡]¦~¤Æ¡A³sÄò½Æ§Q¡^</param>
+    /// <param name="curveName">æ›²ç·šåç¨± (å¦‚ "USD")</param>
+    /// <param name="referenceDate">åŸºæº–æ—¥</param>
+    /// <param name="flatRate">å›ºå®šé›¶åˆ©ç‡ (å¹´åŒ–)</param>
     public FlatZeroCurve(string curveName, DateTime referenceDate, double flatRate)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(curveName);
 
         if (flatRate < -0.20 || flatRate > 0.50)
             throw new ArgumentOutOfRangeException(nameof(flatRate),
-                "§Q²v¥²¶·¦b [-0.20, 0.50] ½d³ò¤º");
+                "åˆ©ç‡å¿…é ˆä½æ–¼ [-0.20, 0.50] ç¯„åœå…§");
 
         CurveName = curveName;
         ReferenceDate = referenceDate;
@@ -38,7 +38,7 @@ public sealed class FlatZeroCurve : IZeroCurve
     }
 
     /// <summary>
-    /// «Ø¥ß¥­©Z¦±½u¡]¨Ï¥Î·í«e¤é´Á¡^
+    /// ä»Šæ—¥ç‚ºåŸºæº–çš„å¹³å¦æ›²ç·šå»ºæ§‹
     /// </summary>
     public FlatZeroCurve(string curveName, double flatRate)
         : this(curveName, DateTime.Today, flatRate)
@@ -62,7 +62,7 @@ public sealed class FlatZeroCurve : IZeroCurve
     public double GetZeroRate(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         return _flatRate;
     }
@@ -70,7 +70,7 @@ public sealed class FlatZeroCurve : IZeroCurve
     public double GetDiscountFactor(DateTime date)
     {
         if (date < ReferenceDate)
-            throw new ArgumentException("¤é´Á¤£¯à¦­©ó°ò·Ç¤é´Á", nameof(date));
+            throw new ArgumentException("æ—¥æœŸä¸å¯æ—©æ–¼åŸºæº–æ—¥", nameof(date));
 
         double timeInYears = (date - ReferenceDate).Days / 365.0;
         return Math.Exp(-_flatRate * timeInYears);
@@ -83,7 +83,7 @@ public sealed class FlatZeroCurve : IZeroCurve
         ArgumentOutOfRangeException.ThrowIfNegative(endTime);
 
         if (endTime <= startTime)
-            throw new ArgumentException("µ²§ô®É¶¡¥²¶· > °_©l®É¶¡");
+            throw new ArgumentException("çµæŸæ™‚é–“å¿…é ˆå¤§æ–¼èµ·å§‹æ™‚é–“");
 
         // Flat Curve: Forward Rate = Zero Rate
         return _flatRate;
@@ -92,7 +92,7 @@ public sealed class FlatZeroCurve : IZeroCurve
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (double MinTenor, double MaxTenor) GetValidRange()
     {
-        // Flat curve ¾A¥Î©ó©Ò¦³´Á­­
+        // å¹³å¦æ›²ç·šè¦–ç‚ºæ”¯æ´æ‰€æœ‰æœŸé™
         return (0.0, double.MaxValue);
     }
 
@@ -102,7 +102,7 @@ public sealed class FlatZeroCurve : IZeroCurve
     }
 
     /// <summary>
-    /// «Ø¥ßÂ²³æªº´ú¸Õ¦±½u
+    /// å»ºç«‹æ¸¬è©¦ç”¨å¹³å¦æ›²ç·š
     /// </summary>
     public static FlatZeroCurve CreateMock(string curveName = "USD", double rate = 0.05)
     {

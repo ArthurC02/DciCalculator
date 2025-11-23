@@ -1,43 +1,43 @@
 namespace DciCalculator.Models;
 
 /// <summary>
-/// ªi°Ê«×¦±­±¸`ÂI
-/// ´y­z¯S©w (Strike, Tenor) ªºÁô§tªi°Ê«×
+/// æ³¢å‹•ç‡æ›²é¢åŸºç¤ç¯€é»
+/// å°æ‡‰ç‰¹å®š (Strike, Tenor) çš„éš±å«æ³¢å‹•ç‡è³‡æ–™
 /// </summary>
 public readonly record struct VolSurfacePoint
 {
     /// <summary>
-    /// Strike¡]°õ¦æ»ù¡A¥i¥H¬Oµ´¹ï­È©Î Moneyness¡^
+    /// å±¥ç´„åƒ¹ Strike (äº¦å¯é€éæ›ç®—å¾— Moneyness)
     /// </summary>
     public double Strike { get; init; }
 
     /// <summary>
-    /// Tenor¡]´Á­­¡A¦~¡^
+    /// åˆ°æœŸæ™‚é–“ Tenor (å¹´)
     /// </summary>
     public double Tenor { get; init; }
 
     /// <summary>
-    /// Áô§tªi°Ê«×¡]¦~¤Æ¡^
+    /// éš±å«æ³¢å‹•ç‡ (Implied Volatility)
     /// </summary>
     public double Volatility { get; init; }
 
     /// <summary>
-    /// Moneyness¡]¬Û¹ï©ó ATM ªº¦ì¸m¡^
-    /// Moneyness = Strike / Forward
+    /// Moneyness (è¡¡é‡èˆ‡ ATM çš„ç›¸å°ä½ç½®)
+    /// å®šç¾©: Moneyness = Strike / Forward
     /// </summary>
     public double? Moneyness { get; init; }
 
     public VolSurfacePoint(double strike, double tenor, double volatility)
     {
         if (strike <= 0)
-            throw new ArgumentOutOfRangeException(nameof(strike), "Strike ¥²¶· > 0");
+            throw new ArgumentOutOfRangeException(nameof(strike), "Strike å¿…é ˆ > 0");
 
         if (tenor <= 0)
-            throw new ArgumentOutOfRangeException(nameof(tenor), "Tenor ¥²¶· > 0");
+            throw new ArgumentOutOfRangeException(nameof(tenor), "Tenor å¿…é ˆ > 0");
 
         if (volatility <= 0 || volatility > 5.0)
             throw new ArgumentOutOfRangeException(nameof(volatility),
-                "ªi°Ê«×¥²¶·¦b (0, 5.0] ½d³ò¤º");
+                "æ³¢å‹•ç‡å¿…é ˆä½æ–¼ (0, 5.0] ç¯„åœå…§");
 
         Strike = strike;
         Tenor = tenor;
@@ -46,7 +46,7 @@ public readonly record struct VolSurfacePoint
     }
 
     /// <summary>
-    /// «Ø¥ß±a Moneyness ªº¸`ÂI
+    /// å»ºç«‹ä¸¦è¨ˆç®— Moneyness çš„ç¯€é»
     /// </summary>
     public static VolSurfacePoint CreateWithMoneyness(
         double strike,
@@ -62,7 +62,7 @@ public readonly record struct VolSurfacePoint
     }
 
     /// <summary>
-    /// ÅçÃÒ¸`ÂI¬O§_¦³®Ä
+    /// é©—è­‰ç¯€é»è³‡æ–™æ˜¯å¦æœ‰æ•ˆ
     /// </summary>
     public bool IsValid()
     {
@@ -82,27 +82,27 @@ public readonly record struct VolSurfacePoint
 }
 
 /// <summary>
-/// Volatility Smile Ãş«¬
+/// æ³¢å‹•ç‡å¾®ç¬‘/æ–œç‡é¡å‹
 /// </summary>
 public enum VolSmileType
 {
     /// <summary>
-    /// µL Smile¡]¥­©Z¡^
+    /// å¹³å¦ (ç„¡å¾®ç¬‘)
     /// </summary>
     Flat,
 
     /// <summary>
-    /// ¼Ğ·Ç Smile¡]¨âºİ°ª¡A¤¤¶¡§C¡^
+    /// å¾®ç¬‘å½¢ (å…©ç«¯è¼ƒé«˜)
     /// </summary>
     Smile,
 
     /// <summary>
-    /// Skew¡]±×°¾¡APut ºİ°ª©ó Call ºİ¡^
+    /// è² æ–œç‡ Skew (Put æ³¢å‹•ç‡é«˜æ–¼ Call)
     /// </summary>
     Skew,
 
     /// <summary>
-    /// ¤Ï¦V Skew
+    /// æ­£æ–œç‡ ReverseSkew (Call æ³¢å‹•ç‡é«˜æ–¼ Put)
     /// </summary>
     ReverseSkew
 }

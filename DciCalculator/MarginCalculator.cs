@@ -3,28 +3,30 @@ using System.Runtime.CompilerServices;
 namespace DciCalculator;
 
 /// <summary>
-/// Margin ­pºâ¾¹
-/// ³B²z»È¦æ§Q¼í¥[¦¨¡]Pips ©Î¦Ê¤À¤ñ¡^
+/// Margin è¨ˆç®—å™¨ã€‚
+/// æä¾›ä»¥ pips æˆ–ç™¾åˆ†æ¯”å°ç†è«–å€¼åŠ å…¥ä¿ç•™åˆ©æ½¤ï¼ˆMarginï¼‰çš„åŠŸèƒ½ã€‚
 /// 
-/// Margin ¹ï DCI ªº¼vÅT¡G
-/// - Margin ­°§C´ÁÅv»ù­È
-/// - ­°§C´ÁÅv§Q®§
-/// - ­°§CÁ` Coupon¡]«È¤á¬İ¨ìªº¦¬¯q²v¡^
+/// èˆ‡ DCI å•†å“ç›¸é—œçš„ä¸»è¦ç”¨é€”ï¼š
+/// - ä»¥ pips ä¸‹èª¿ç†è«– Strikeï¼ˆè³£å‡º Put æ™‚å–å¾—æ›´ä¿å®ˆè¡Œä½¿åƒ¹ï¼‰
+/// - ä»¥ç™¾åˆ†æ¯”ä¸‹èª¿ç†è«–æœŸæ¬Šåƒ¹æ ¼
+/// - å°‡èª¿æ•´å¾ŒæœŸæ¬Šåƒ¹æ ¼è½‰æ›ç‚ºé¡å¤–åˆ©æ¯ä¸¦è¨ˆç®—æœ€çµ‚ Coupon
+/// - ä¾ç›®æ¨™ Coupon åæ¨æ‰€éœ€ Margin ç™¾åˆ†æ¯”
+/// - å¥—ç”¨ Bid/Ask Spread èˆ‡åˆè¨ˆæˆæœ¬ï¼ˆMargin + Spreadï¼‰
 /// </summary>
 public static class MarginCalculator
 {
     /// <summary>
-    /// ¥H Pips ¤è¦¡¥[¤W Margin
+    /// ä»¥ pips å½¢å¼å°ç†è«– Strike å¥—ç”¨ Marginï¼ˆé€šå¸¸ç”¨æ–¼è³£å‡º Put èª¿æ•´è¡Œä½¿åƒ¹ï¼‰ã€‚
     /// 
-    /// ­ì²z¡G
-    /// - ²z½× Strike = 30.00
-    /// - ¥[¤W 10 pips Margin ¡÷ ¹ê»Ú Strike = 29.90
-    /// - Strike ­°§C ¡÷ Put ´ÁÅv»ù­È­°§C ¡÷ «È¤á¦¬¯q­°§C
+    /// ç¯„ä¾‹ï¼š
+    /// - ç†è«– Strike = 30.00
+    /// - åŠ å…¥ 10 pipsï¼ˆpipSize=0.01ï¼‰å¾Œèª¿æ•´ Strike = 29.90
+    /// - ä¸‹èª¿ Strike ä»£è¡¨è³£å‡º Put æ™‚çš„è¡Œä½¿åƒ¹æ›´ä¿å®ˆï¼Œæœ‰åŠ©æé«˜å®‰å…¨é‚Šéš›ã€‚
     /// </summary>
-    /// <param name="theoreticalStrike">²z½× Strike¡]¤£§t Margin¡^</param>
-    /// <param name="marginPips">Margin¡]pips¡^¡A¥¿­Èªí¥Ü­°§C Strike</param>
-    /// <param name="pipSize">Pip ¤j¤p¡]¹w³] 0.01¡A¾A¥Î USD/TWD¡^</param>
-    /// <returns>¥[¤W Margin «áªº Strike</returns>
+    /// <param name="theoreticalStrike">ç†è«– Strikeï¼ˆå°šæœªåŠ å…¥ Marginï¼‰</param>
+    /// <param name="marginPips">Marginï¼ˆpipsï¼‰ï¼Œç”¨ä¾†ä¸‹èª¿ Strike</param>
+    /// <param name="pipSize">æ¯ pip æ•¸å€¼å¤§å°ï¼ˆé è¨­ 0.01ï¼Œé©ç”¨ USD/TWD é¡å‹ï¼‰</param>
+    /// <returns>åŠ å…¥ Margin å¾Œçš„èª¿æ•´ Strike</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static decimal ApplyMarginToStrike(
         decimal theoreticalStrike,
@@ -33,31 +35,31 @@ public static class MarginCalculator
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(theoreticalStrike);
         
-        // Margin ­°§C Strike¡]¹ï»È¦æ¦³§Q¡^
+        // ä»¥ pips ä¸‹èª¿ Strikeï¼ˆç›¸ç•¶æ–¼éŠ€è¡Œç•™å–åˆ©æ½¤ï¼‰
         decimal marginAmount = marginPips * pipSize;
         decimal adjustedStrike = theoreticalStrike - marginAmount;
 
-        // ½T«O Strike ¬°¥¿
+        // ç¢ºä¿ Strike ä»ç‚ºæ­£æ•¸
         if (adjustedStrike <= 0)
             throw new ArgumentException(
-                $"½Õ¾ã«á Strike ({adjustedStrike}) ¥²¶· > 0¡C" +
-                $"²z½× Strike: {theoreticalStrike}, Margin: {marginPips} pips",
+                $"èª¿æ•´å¾Œ Strike ({adjustedStrike}) å¿…é ˆ > 0ã€‚" +
+                $"ç†è«– Strike: {theoreticalStrike}, Margin: {marginPips} pips",
                 nameof(marginPips));
 
         return adjustedStrike;
     }
 
     /// <summary>
-    /// ¥H¦Ê¤À¤ñ¤è¦¡¥[¤W Margin
+    /// ä»¥ç™¾åˆ†æ¯”å½¢å¼å°ç†è«–æœŸæ¬Šåƒ¹æ ¼å¥—ç”¨ Marginã€‚
     /// 
-    /// ­ì²z¡G
-    /// - ²z½×´ÁÅv»ù®æ = 0.50 TWD per 1 USD
-    /// - ¥[¤W 10% Margin ¡÷ ¹ê»Ú»ù®æ = 0.45 TWD per 1 USD
-    /// - ´ÁÅv»ù®æ­°§C ¡÷ «È¤á¦¬¯q­°§C
+    /// ç¯„ä¾‹ï¼š
+    /// - ç†è«–åƒ¹æ ¼ = 0.50 TWD per 1 USD
+    /// - åŠ å…¥ 10% Margin å¾Œèª¿æ•´åƒ¹æ ¼ = 0.45 TWD per 1 USD
+    /// - ä¸‹èª¿å¾Œåƒ¹æ ¼åæ˜ éŠ€è¡Œç•™å–åˆ©æ½¤ã€‚
     /// </summary>
-    /// <param name="theoreticalPrice">²z½×´ÁÅv»ù®æ</param>
-    /// <param name="marginPercent">Margin ¦Ê¤À¤ñ¡]0.10 = 10%¡^</param>
-    /// <returns>¦©°£ Margin «áªº´ÁÅv»ù®æ</returns>
+    /// <param name="theoreticalPrice">ç†è«–æœŸæ¬Šåƒ¹æ ¼</param>
+    /// <param name="marginPercent">Margin ç™¾åˆ†æ¯”ï¼ˆ0.10 = 10%ï¼‰</param>
+    /// <returns>å¥—ç”¨ Margin å¾Œçš„æœŸæ¬Šåƒ¹æ ¼</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static decimal ApplyMarginToPrice(
         decimal theoreticalPrice,
@@ -65,34 +67,33 @@ public static class MarginCalculator
     {
         if (theoreticalPrice < 0)
             throw new ArgumentOutOfRangeException(nameof(theoreticalPrice), 
-                "´ÁÅv»ù®æ¤£¯à¬°­t");
+                "ç†è«–åƒ¹æ ¼ä¸å¯ç‚ºè² ã€‚");
 
         if (marginPercent < 0 || marginPercent >= 1.0)
             throw new ArgumentOutOfRangeException(nameof(marginPercent),
-                "Margin ¦Ê¤À¤ñ¥²¶·¦b [0, 1) ½d³ò¤º");
+                "Margin ç™¾åˆ†æ¯”å¿…é ˆè½åœ¨ [0, 1)ã€‚");
 
-        // ¦©°£ Margin
+        // å¥—ç”¨ç™¾åˆ†æ¯” Margin ä¸‹èª¿åƒ¹æ ¼
         decimal adjustedPrice = theoreticalPrice * (1m - (decimal)marginPercent);
 
         return adjustedPrice;
     }
 
     /// <summary>
-    /// ­pºâ¥[¤W Margin «áªº Coupon
-    /// 
-    /// §¹¾ãÅŞ¿è¡G
-    /// 1. ­pºâ²z½×´ÁÅv»ù®æ¡]µL Margin¡^
-    /// 2. ¦©°£ Margin
-    /// 3. ­«·s­pºâ´ÁÅv§Q®§
-    /// 4. ­pºâ·sªºÁ` Coupon
+    /// è¨ˆç®—åŠ å…¥ Margin å¾Œçš„æœ€çµ‚ Couponã€‚
+    /// æµç¨‹ï¼š
+    /// 1. ä½¿ç”¨ç†è«–æœŸæ¬Šåƒ¹æ ¼ï¼ˆæœªå« Marginï¼‰
+    /// 2. å¥—ç”¨ Margin ä¸‹èª¿æœŸæ¬Šåƒ¹æ ¼
+    /// 3. æ›ç®—ç‚ºæœŸå…§é¡å¤–åˆ©æ¯ï¼ˆä»¥å¤–å¹£åç¾©è¨ˆï¼‰
+    /// 4. åŠ ç¸½å­˜æ¬¾åˆ©æ¯å¾Œè¨ˆç®—æœ€çµ‚å¹´åŒ– Coupon
     /// </summary>
-    /// <param name="theoreticalOptionPrice">²z½×´ÁÅv»ù®æ¡]¥»¹ô¨C 1 ¥~¹ô¡^</param>
-    /// <param name="marginPercent">Margin ¦Ê¤À¤ñ</param>
-    /// <param name="notionalForeign">¥~¹ô¥»ª÷</param>
-    /// <param name="spot">§Y´Á¶×²v</param>
-    /// <param name="depositInterest">©w¦s§Q®§¡]¥~¹ô¡^</param>
-    /// <param name="tenorInYears">´Á­­¡]¦~¡^</param>
-    /// <returns>¥[¤W Margin «áªº¦~¤Æ Coupon</returns>
+    /// <param name="theoreticalOptionPrice">ç†è«–æœŸæ¬Šåƒ¹æ ¼ï¼ˆä¸å« Marginï¼ŒæŒ‰ 1 å¹´åŒ–ï¼‰</param>
+    /// <param name="marginPercent">Margin ç™¾åˆ†æ¯”</param>
+    /// <param name="notionalForeign">å¤–å¹£åç¾©æœ¬é‡‘</param>
+    /// <param name="spot">å³æœŸåŒ¯ç‡</param>
+    /// <param name="depositInterest">å­˜æ¬¾åˆ©æ¯ï¼ˆå¤–å¹£ï¼‰</param>
+    /// <param name="tenorInYears">æœŸå…§å¹´æ•¸ï¼ˆå¹´æœŸï¼‰</param>
+    /// <returns>å¥—ç”¨ Margin å¾Œçš„å¹´åŒ– Coupon</returns>
     public static double CalculateCouponWithMargin(
         double theoreticalOptionPrice,
         double marginPercent,
@@ -105,58 +106,55 @@ public static class MarginCalculator
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(spot);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenorInYears);
 
-        // 1. ¦©°£ Margin
+        // 1. å¥—ç”¨ Margin ä¸‹èª¿æœŸæ¬Šåƒ¹æ ¼
         double adjustedOptionPrice = theoreticalOptionPrice * (1.0 - marginPercent);
 
-        // 2. Âà´«¦¨¥~¹ôµ¥­È
+        // 2. æ›ç®—ç‚ºæ¯å–®ä½å¤–å¹£çš„æœŸæ¬Šåƒ¹æ ¼
         double optionPricePerForeign = adjustedOptionPrice / (double)spot;
 
-        // 3. ­pºâ´ÁÅv§Q®§¡]¥~¹ô¡^
+        // 3. è¨ˆç®—æœŸæ¬Šé¡å¤–åˆ©æ¯ï¼ˆå¤–å¹£ï¼‰
         decimal optionInterest = notionalForeign * (decimal)optionPricePerForeign;
 
-        // 4. Á`§Q®§
+        // 4. åŠ ç¸½å­˜æ¬¾åˆ©æ¯
         decimal totalInterest = depositInterest + optionInterest;
 
-        // 5. ¦~¤Æ Coupon
+        // 5. æ›ç®—å¹´åŒ– Coupon
         double coupon = (double)(totalInterest / notionalForeign) / tenorInYears;
 
         return coupon;
     }
 
     /// <summary>
-    /// ­pºâ¹F¨ì¥Ø¼Ğ Coupon ©Ò»İªº Margin
-    /// ¨Ï¥Î¤G¤À·j´Mªk
+    /// åæ¨é”æˆç›®æ¨™ Coupon æ‰€éœ€çš„ Margin ç™¾åˆ†æ¯”ï¼ˆè¿‘ä¼¼ç·šæ€§ï¼‰ã€‚
     /// </summary>
-    /// <param name="theoreticalCoupon">²z½× Coupon¡]µL Margin¡^</param>
-    /// <param name="targetCoupon">¥Ø¼Ğ Coupon</param>
-    /// <returns>©Ò»İ Margin ¦Ê¤À¤ñ¡A­YµLªk¹F¦¨«hªğ¦^ NaN</returns>
+    /// <param name="theoreticalCoupon">ç†è«– Couponï¼ˆæœªå« Marginï¼‰</param>
+    /// <param name="targetCoupon">ç›®æ¨™ Coupon</param>
+    /// <returns>æ‰€éœ€ Margin ç™¾åˆ†æ¯”ï¼›è‹¥ç„¡æ³•é”æˆå‰‡å›å‚³ NaN</returns>
     public static double SolveMarginForTargetCoupon(
         double theoreticalCoupon,
         double targetCoupon)
     {
         if (targetCoupon >= theoreticalCoupon)
-            return 0.0; // µL»İ Margin
+            return 0.0; // ä¸éœ€ä»»ä½• Margin
 
         if (targetCoupon <= 0)
-            return double.NaN; // µL®Ä¥Ø¼Ğ
+            return double.NaN; // ç›®æ¨™ç„¡æ•ˆ
 
-        // ¨Ï¥Î½u©Êªñ¦ü
-        // Coupon »P´ÁÅv»ù®æ¦¨¥¿¤ñ
-        // margin_pct = (²z½× Coupon - ¥Ø¼Ğ Coupon) / ²z½× Coupon
+        // ä½¿ç”¨ç·šæ€§è¿‘ä¼¼ï¼š
+        // margin_pct = (ç†è«– Coupon - ç›®æ¨™ Coupon) / ç†è«– Coupon
         double marginPercent = (theoreticalCoupon - targetCoupon) / theoreticalCoupon;
 
-        // ­­¨î½d³ò [0, 0.5]¡]³Ì¦h¦©°£ 50%¡^
+        // åŸºæœ¬é¢¨æ§ä¸Šé™ï¼šä¸è¶…é 50%
         return Math.Clamp(marginPercent, 0.0, 0.5);
     }
 
     /// <summary>
-    /// ­pºâ Bid/Ask Spread¡]¶R½æ»ù®t¡^
-    /// ¥Î©ó±q Mid »ù±Àºâ¹ï«È³ø»ù
+    /// ç”± Mid åƒ¹èˆ‡ç¸½ Spreadï¼ˆpipsï¼‰è¨ˆç®— Bid/Ask å ±åƒ¹ã€‚
     /// </summary>
-    /// <param name="mid">Mid »ù®æ</param>
-    /// <param name="spreadPips">Spread¡]pips¡^</param>
-    /// <param name="pipSize">Pip ¤j¤p</param>
-    /// <returns>(Bid, Ask)</returns>
+    /// <param name="mid">Mid åƒ¹</param>
+    /// <param name="spreadPips">ç¸½ Spreadï¼ˆpipsï¼‰</param>
+    /// <param name="pipSize">æ¯ pip æ•¸å€¼å¤§å°</param>
+    /// <returns>(Bid, Ask) é›™å‘å ±åƒ¹</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (decimal Bid, decimal Ask) ApplySpread(
         decimal mid,
@@ -174,12 +172,12 @@ public static class MarginCalculator
     }
 
     /// <summary>
-    /// ­pºâÁ`¦¨¥»¡]Margin + Spread¡^¹ï Coupon ªº¼vÅT
+    /// å¥—ç”¨ç¸½æˆæœ¬ï¼ˆMargin + Spread æˆæœ¬ç™¾åˆ†æ¯”ï¼‰å¾Œçš„ Couponã€‚
     /// </summary>
-    /// <param name="theoreticalCoupon">²z½× Coupon</param>
-    /// <param name="marginPercent">Margin ¦Ê¤À¤ñ</param>
-    /// <param name="spreadCostPercent">Spread ¦¨¥»¦Ê¤À¤ñ</param>
-    /// <returns>¹ê»Ú Coupon</returns>
+    /// <param name="theoreticalCoupon">ç†è«– Coupon</param>
+    /// <param name="marginPercent">Margin ç™¾åˆ†æ¯”</param>
+    /// <param name="spreadCostPercent">Spread æˆæœ¬ç™¾åˆ†æ¯”</param>
+    /// <returns>æ‰£é™¤æˆæœ¬å¾Œçš„ Coupon</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static double ApplyTotalCost(
         double theoreticalCoupon,
@@ -189,7 +187,7 @@ public static class MarginCalculator
         double totalCost = marginPercent + spreadCostPercent;
         
         if (totalCost >= 1.0)
-            throw new ArgumentException("Á`¦¨¥»¤£¯à >= 100%");
+            throw new ArgumentException("ç¸½æˆæœ¬ç™¾åˆ†æ¯”ä¸å¯ >= 100%");
 
         return theoreticalCoupon * (1.0 - totalCost);
     }

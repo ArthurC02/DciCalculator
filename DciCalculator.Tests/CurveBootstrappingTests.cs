@@ -1,11 +1,10 @@
 using DciCalculator.Curves;
-using DciCalculator.Models;
 using Xunit;
 
 namespace DciCalculator.Tests;
 
 /// <summary>
-/// Curve Bootstrapping ³æ¤¸´ú¸Õ
+/// æ›²ç·š Bootstrapping æ¸¬è©¦ï¼šé©—è­‰å­˜æ¬¾èˆ‡äº¤æ›åˆç´„ç”Ÿæˆé›¶åˆ©ç‡æ›²ç·šã€æŠ˜ç¾å› å­èˆ‡æ’å€¼ã€‚
 /// </summary>
 public class CurveBootstrappingTests
 {
@@ -20,7 +19,7 @@ public class CurveBootstrappingTests
         // Act
         double zeroRate = deposit.CalculateZeroRate();
 
-        // Assert: Zero Rate À³±µªñ 1.5%
+        // Assert: Zero Rate æ‡‰æ¥è¿‘ 1.5%
         Assert.InRange(zeroRate, 0.014, 0.016);
     }
 
@@ -34,8 +33,8 @@ public class CurveBootstrappingTests
         double df = deposit.CalculateDiscountFactor();
 
         // Assert: DF = 1 / (1 + r * T)
-        // ¹ê»Ú­pºâ¦Ò¼{ Act/360¡GT ? 365/360 = 1.0139
-        // DF = 1 / (1 + 0.02 * 1.0139) ? 0.9801
+        // èªªæ˜ï¼šè‹¥è€ƒæ…® Act/360 => T â‰ˆ 365/360 = 1.0139
+        // DF = 1 / (1 + 0.02 * 1.0139) â‰ˆ 0.9801
         Assert.Equal(0.9801, df, precision: 3);
     }
 
@@ -46,17 +45,17 @@ public class CurveBootstrappingTests
         var swap = SwapInstrument.Create(_referenceDate, "1Y", 0.02);
         var flatCurve = new FlatZeroCurve("USD", _referenceDate, 0.02);
 
-        // Act: Par Swap ªº PV À³¸Ó±µªñ 0
+        // Act: Par Swap çš„ PV æ‡‰æ¥è¿‘ 0
         double pv = swap.CalculatePresentValue(flatCurve);
 
         // Assert
-        Assert.InRange(Math.Abs(pv), 0.0, 0.01); // ±µªñ 0
+        Assert.InRange(Math.Abs(pv), 0.0, 0.01); // æ¥è¿‘ 0
     }
 
     [Fact]
     public void CurveBootstrapper_BootstrapDeposits()
     {
-        // Arrange: 3 ­Ó Deposits
+        // Arrange: 3 ç­† Deposits
         var instruments = new List<MarketInstrument>
         {
             DepositInstrument.Create(_referenceDate, "3M", 0.015),
@@ -78,7 +77,7 @@ public class CurveBootstrappingTests
         Assert.InRange(rate6M, 0.015, 0.017);
         Assert.InRange(rate1Y, 0.016, 0.018);
 
-        // ´Á­­µ²ºc¡Gµu´Á < ªø´Á
+        // æ–œç‡çµæ§‹ï¼šè¼ƒé•·æœŸé™åˆ©ç‡ä¸ä½æ–¼è¼ƒçŸ­æœŸé™
         Assert.True(rate6M >= rate3M);
         Assert.True(rate1Y >= rate6M);
     }
@@ -86,7 +85,7 @@ public class CurveBootstrappingTests
     [Fact]
     public void CurveBootstrapper_BuildStandardCurve()
     {
-        // Arrange: ¥«³õ³ø»ù
+        // Arrange: å¤šæœŸé™å¸‚å ´å ±åƒ¹
         var marketQuotes = new Dictionary<string, double>
         {
             { "1M", 0.0150 },
@@ -122,10 +121,10 @@ public class CurveBootstrappingTests
         var bootstrapper = new CurveBootstrapper("USD", _referenceDate);
         var curve = bootstrapper.Bootstrap(instruments);
 
-        // Act: ´¡­È 4.5M (0.375Y)
+        // Act: æŸ¥è©¢ 4.5M (0.375Y) åˆ©ç‡
         double rate4_5M = curve.GetZeroRate(0.375);
 
-        // Assert: À³¸Ó¦b 1.5% ~ 1.7% ¤§¶¡
+        // Assert: æ’å€¼çµæœä½æ–¼ 1.5% ~ 1.7% ç¯„åœ
         Assert.InRange(rate4_5M, 0.015, 0.017);
     }
 
@@ -141,10 +140,10 @@ public class CurveBootstrappingTests
 
         var curve = CurveBootstrapper.BuildStandardCurve("USD", _referenceDate, marketQuotes);
 
-        // Act: ­pºâ 6M-1Y Forward Rate
+        // Act: è¨ˆç®— 6Mâ†’1Y Forward Rate
         double forwardRate = curve.GetForwardRate(0.5, 1.0);
 
-        // Assert: Forward Rate À³¸Ó > Spot Rate¡]¥¿±`´Á­­µ²ºc¡^
+        // Assert: Forward Rate åˆç†å¤§æ–¼ 6M ç¾è²¨é›¶åˆ©ç‡ï¼ˆå‡æ¯æ–œç‡ï¼‰
         Assert.True(forwardRate > 0.015);
     }
 }

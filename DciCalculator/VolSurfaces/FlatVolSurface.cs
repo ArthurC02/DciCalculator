@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 namespace DciCalculator.VolSurfaces;
 
 /// <summary>
-/// ¥­©Zªi°Ê«×¦±­±¡]Flat Volatility Surface¡^
-/// ©Ò¦³ Strike ©M Tenor ¨Ï¥Î¬Û¦Pªi°Ê«×
+/// å¹³å¦æ³¢å‹•ç‡æ›²é¢ (Flat Volatility Surface)ã€‚
+/// æ‰€æœ‰ Strike èˆ‡ Tenor å›å‚³ç›¸åŒçš„ä¸€è‡´æ³¢å‹•ç‡ã€‚
 /// 
-/// ¥Î³~¡G
-/// - ¦V«á¬Û®e¡]´À¥N³æ¤@ªi°Ê«×°Ñ¼Æ¡^
-/// - Â²¤Æ³õ´º´ú¸Õ
-/// - ¬y°Ê©Ê¸û®tªº¥«³õ
+/// é©ç”¨æƒ…å¢ƒï¼š
+/// - æ—©æœŸåŸå‹ï¼å°šç„¡å®Œæ•´ Smile è³‡æ–™
+/// - å¿«é€Ÿé¢¨éšªæ¦‚ç®—
+/// - å›æ¸¬æˆ–æ•™å­¸ç¤ºä¾‹
 /// </summary>
 public sealed class FlatVolSurface : IVolSurface
 {
@@ -19,18 +19,18 @@ public sealed class FlatVolSurface : IVolSurface
     public DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// «Ø¥ß¥­©Zªi°Ê«×¦±­±
+    /// å»ºç«‹å¹³å¦æ›²é¢ã€‚
     /// </summary>
-    /// <param name="surfaceName">¦±­±¦WºÙ¡]¨Ò¦p "USD/TWD"¡^</param>
-    /// <param name="referenceDate">°ò·Ç¤é´Á</param>
-    /// <param name="flatVol">©T©wªi°Ê«×¡]¦~¤Æ¡^</param>
+    /// <param name="surfaceName">æ›²é¢åç¨±ï¼ˆä¾‹å¦‚ "USD/TWD"ï¼‰ã€‚</param>
+    /// <param name="referenceDate">åŸºæº–æ—¥æœŸã€‚</param>
+    /// <param name="flatVol">å›ºå®šå¹´åŒ–æ³¢å‹•ç‡ã€‚</param>
     public FlatVolSurface(string surfaceName, DateTime referenceDate, double flatVol)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(surfaceName);
 
         if (flatVol <= 0 || flatVol > 5.0)
             throw new ArgumentOutOfRangeException(nameof(flatVol),
-                "ªi°Ê«×¥²¶·¦b (0, 5.0] ½d³ò¤º");
+                "æ³¢å‹•ç‡å¿…é ˆè½åœ¨ (0, 5.0] ç¯„åœå…§");
 
         SurfaceName = surfaceName;
         ReferenceDate = referenceDate;
@@ -38,7 +38,7 @@ public sealed class FlatVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// «Ø¥ß¥­©Z¦±­±¡]¨Ï¥Î·í«e¤é´Á¡^
+    /// å»ºç«‹å¹³å¦æ›²é¢ï¼ˆåŸºæº–æ—¥æœŸ = ä»Šæ—¥ï¼‰ã€‚
     /// </summary>
     public FlatVolSurface(string surfaceName, double flatVol)
         : this(surfaceName, DateTime.Today, flatVol)
@@ -75,7 +75,7 @@ public sealed class FlatVolSurface : IVolSurface
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (double MinStrike, double MaxStrike, double MinTenor, double MaxTenor) GetValidRange()
     {
-        // Flat surface ¾A¥Î©ó©Ò¦³ Strike ©M Tenor
+        // å¹³å¦æ›²é¢ï¼šè¦–ç‚ºæ”¯æ´æ‰€æœ‰æ­£çš„ Strike èˆ‡ Tenor
         return (0.0, double.MaxValue, 0.0, double.MaxValue);
     }
 
@@ -91,7 +91,7 @@ public sealed class FlatVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// «Ø¥ß´ú¸Õ¥Î¦±­±
+    /// å»ºç«‹ç¤ºä¾‹æ›²é¢ã€‚
     /// </summary>
     public static FlatVolSurface CreateMock(string surfaceName = "USD/TWD", double vol = 0.10)
     {

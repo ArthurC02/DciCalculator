@@ -4,13 +4,13 @@ using DciCalculator.Models;
 namespace DciCalculator.VolSurfaces;
 
 /// <summary>
-/// ´¡­Èªi°Ê«×¦±­±
-/// ¨Ï¥ÎÂù½u©Ê´¡­È¡]Bilinear Interpolation¡^¦b Strike ©M Tenor ¨â­Óºû«×´¡­È
+/// å¯æ’å€¼çš„æ³¢å‹•ç‡æ›²é¢ã€‚
+/// ä½¿ç”¨é›™ç·šæ€§æ’å€¼ (Bilinear Interpolation) æ–¼ Strike èˆ‡ Tenor äºŒç¶­ç¶²æ ¼ä¸Šè¨ˆç®—ä¸­é–“é»çš„éš±å«æ³¢å‹•ç‡ã€‚
 /// 
-/// ´¡­ÈÅŞ¿è¡G
-/// 1. Strike ºû«×¡G½u©Ê´¡­È
-/// 2. Tenor ºû«×¡G½u©Ê´¡­È
-/// 3. ²Õ¦X¡GÂù½u©Ê´¡­È
+/// æ’å€¼æ ¸å¿ƒæ¦‚å¿µï¼š
+/// 1. Strike å€é–“ï¼šç·šæ€§æ¬Šé‡
+/// 2. Tenor å€é–“ï¼šç·šæ€§æ¬Šé‡
+/// 3. çµ„åˆï¼šé›™ç·šæ€§åŠ æ¬Š
 /// </summary>
 public sealed class InterpolatedVolSurface : IVolSurface
 {
@@ -22,11 +22,11 @@ public sealed class InterpolatedVolSurface : IVolSurface
     public DateTime ReferenceDate { get; }
 
     /// <summary>
-    /// «Ø¥ß´¡­Èªi°Ê«×¦±­±
+    /// å»ºç«‹æ’å€¼æ›²é¢ã€‚
     /// </summary>
-    /// <param name="surfaceName">¦±­±¦WºÙ</param>
-    /// <param name="referenceDate">°ò·Ç¤é´Á</param>
-    /// <param name="points">¦±­±¸`ÂI¡]¦Ü¤Ö 4 ­ÓÂI¡G2x2 ºô®æ¡^</param>
+    /// <param name="surfaceName">æ›²é¢åç¨±ã€‚</param>
+    /// <param name="referenceDate">åŸºæº–æ—¥æœŸã€‚</param>
+    /// <param name="points">è¼¸å…¥åŸºç¤ç¶²æ ¼é»ï¼ˆè‡³å°‘ 4 å€‹ï¼›éœ€å½¢æˆ >= 2x2 ç¶²æ ¼ï¼‰ã€‚</param>
     public InterpolatedVolSurface(
         string surfaceName,
         DateTime referenceDate,
@@ -41,21 +41,21 @@ public sealed class InterpolatedVolSurface : IVolSurface
         _points = points.ToArray();
 
         if (_points.Length < 4)
-            throw new ArgumentException("¦Ü¤Ö»İ­n 4 ­Ó¸`ÂI¡]2x2 ºô®æ¡^", nameof(points));
+            throw new ArgumentException("è‡³å°‘éœ€è¦ 4 å€‹åŸºç¤ç¶²æ ¼é» (2x2)" , nameof(points));
 
-        // ÅçÃÒ©Ò¦³¸`ÂI
+        // é©—è­‰æ‰€æœ‰è¼¸å…¥ç¶²æ ¼é»æœ‰æ•ˆæ€§
         foreach (var point in _points)
         {
             if (!point.IsValid())
-                throw new ArgumentException($"¸`ÂIµL®Ä: {point}");
+                throw new ArgumentException($"è¼¸å…¥é»ç„¡æ•ˆ: {point}");
         }
 
-        // ´£¨ú°ß¤@ªº Strike ©M Tenor
+        // å»ºç«‹å”¯ä¸€ Strike èˆ‡ Tenor é™£åˆ—
         _uniqueStrikes = _points.Select(p => p.Strike).Distinct().OrderBy(s => s).ToArray();
         _uniqueTenors = _points.Select(p => p.Tenor).Distinct().OrderBy(t => t).ToArray();
 
         if (_uniqueStrikes.Length < 2 || _uniqueTenors.Length < 2)
-            throw new ArgumentException("¦Ü¤Ö»İ­n 2 ­Ó¤£¦Pªº Strike ©M 2 ­Ó¤£¦Pªº Tenor");
+            throw new ArgumentException("è‡³å°‘éœ€è¦ 2 å€‹ä¸åŒ Strike èˆ‡ 2 å€‹ä¸åŒ Tenor");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,29 +64,27 @@ public sealed class InterpolatedVolSurface : IVolSurface
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(strike);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenor);
 
-        // Ãä¬É¥~±À
+        // é‚Šç•Œè£åˆ‡ï¼ˆClampï¼‰
         strike = Math.Clamp(strike, _uniqueStrikes[0], _uniqueStrikes[^1]);
         tenor = Math.Clamp(tenor, _uniqueTenors[0], _uniqueTenors[^1]);
 
-        // §ä¨ì´¡­È°Ï¶¡
+        // æ‰¾å‡ºæ‰€åœ¨å€é–“ç´¢å¼•
         int strikeIndex = FindIntervalIndex(_uniqueStrikes, strike);
         int tenorIndex = FindIntervalIndex(_uniqueTenors, tenor);
 
-        // Âù½u©Ê´¡­È
+        // åŸ·è¡Œé›™ç·šæ€§æ’å€¼
         return BilinearInterpolation(strike, tenor, strikeIndex, tenorIndex);
     }
 
     /// <summary>
-    /// Âù½u©Ê´¡­È
-    /// 
-    /// µ¹©w¥|­Ó¨¤ÂI¡G
-    /// (K1, T1) ¡÷ V11    (K2, T1) ¡÷ V21
-    /// (K1, T2) ¡÷ V12    (K2, T2) ¡÷ V22
-    /// 
-    /// ´¡­ÈÂI (K, T) ªº­È¡G
-    /// V(K, T) = V11 * (K2-K)*(T2-T) + V21 * (K-K1)*(T2-T)
-    ///         + V12 * (K2-K)*(T-T1) + V22 * (K-K1)*(T-T1)
-    ///         ¡Ò [(K2-K1) * (T2-T1)]
+    /// é›™ç·šæ€§æ’å€¼å…¬å¼èªªæ˜ï¼š
+    /// è§’è½å››é»ï¼š
+    /// (K1, T1)=V11  (K2, T1)=V21
+    /// (K1, T2)=V12  (K2, T2)=V22
+    /// æ¬²æ±‚ä¸­é» (K, T)ï¼š
+    /// V(K,T) = V11*(K2-K)*(T2-T) + V21*(K-K1)*(T2-T)
+    ///        + V12*(K2-K)*(T-T1) + V22*(K-K1)*(T-T1)
+    ///        / [(K2-K1)*(T2-T1)]
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double BilinearInterpolation(double strike, double tenor, int strikeIdx, int tenorIdx)
@@ -96,17 +94,17 @@ public sealed class InterpolatedVolSurface : IVolSurface
         double t1 = _uniqueTenors[tenorIdx];
         double t2 = _uniqueTenors[tenorIdx + 1];
 
-        // §ä¨ì¥|­Ó¨¤ÂIªºªi°Ê«×
+        // å–å¾—å››å€‹è§’è½é»æ³¢å‹•ç‡
         double v11 = GetPointVolatility(k1, t1);
         double v21 = GetPointVolatility(k2, t1);
         double v12 = GetPointVolatility(k1, t2);
         double v22 = GetPointVolatility(k2, t2);
 
-        // ­pºâÅv­«
+        // è¨ˆç®—æ¬Šé‡
         double wK = (strike - k1) / (k2 - k1);
         double wT = (tenor - t1) / (t2 - t1);
 
-        // Âù½u©Ê´¡­È
+        // é›™ç·šæ€§çµ„åˆ
         double vol = (1 - wK) * (1 - wT) * v11
                    + wK * (1 - wT) * v21
                    + (1 - wK) * wT * v12
@@ -116,7 +114,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// ¨ú±o«ü©w (Strike, Tenor) ªºªi°Ê«×¡]ºë½T¤Ç°t¡^
+    /// å–å¾—æŒ‡å®š (Strike, Tenor) æ³¢å‹•ç‡ï¼ˆå¿…é ˆæ˜¯åŸå§‹ç¶²æ ¼é»ï¼‰ã€‚
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private double GetPointVolatility(double strike, double tenor)
@@ -126,7 +124,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
             Math.Abs(p.Tenor - tenor) < 1e-6);
 
         if (point.Equals(default(VolSurfacePoint)))
-            throw new InvalidOperationException($"§ä¤£¨ì¸`ÂI K={strike}, T={tenor}");
+            throw new InvalidOperationException($"æ‰¾ä¸åˆ°ç¶²æ ¼é» K={strike}, T={tenor}");
 
         return point.Volatility;
     }
@@ -143,7 +141,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(moneyness);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tenor);
 
-        // °²³] ATM Strike ¦b¤¤¶¡
+        // ä»¥ä¸­é–“ Strike åšç‚º ATM è¿‘ä¼¼
         double atmStrike = (_uniqueStrikes[0] + _uniqueStrikes[^1]) / 2.0;
         double strike = moneyness * atmStrike;
 
@@ -166,7 +164,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// ¤G¤À·j´M§ä¨ì°Ï¶¡
+    /// äºŒåˆ†æœå°‹æ‰¾å€é–“ç´¢å¼•
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FindIntervalIndex(double[] sortedArray, double value)
@@ -188,7 +186,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// ¨ú±o©Ò¦³¸`ÂI¡]°ßÅª¡^
+    /// å–å¾—å…¨éƒ¨åŸå§‹ç¶²æ ¼é»ï¼ˆæœªæ’åºéï¼‰ã€‚
     /// </summary>
     public IReadOnlyList<VolSurfacePoint> GetPoints() => _points;
 
@@ -200,7 +198,7 @@ public sealed class InterpolatedVolSurface : IVolSurface
     }
 
     /// <summary>
-    /// «Ø¥ß¼Ğ·Ç 2x3 ºô®æ¡]´ú¸Õ¥Î¡^
+    /// å»ºç«‹æ¨™æº– 2x3 ç¶²æ ¼ï¼ˆç¤ºä¾‹ç”¨ï¼‰ã€‚
     /// </summary>
     public static InterpolatedVolSurface CreateStandardGrid(
         string surfaceName,
