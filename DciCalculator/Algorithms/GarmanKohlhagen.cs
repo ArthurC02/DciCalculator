@@ -1,4 +1,6 @@
 ﻿using DciCalculator.Models;
+using DciCalculator.Curves;
+using DciCalculator.VolSurfaces;
 using System.Runtime.CompilerServices;
 
 namespace DciCalculator.Algorithms;
@@ -8,6 +10,8 @@ namespace DciCalculator.Algorithms;
 /// Black-Scholes 模型的 FX 版本，考慮本幣和外幣利率
 /// 實現嚴謹的數值穩定性和效能優化
 /// 精度：計算結果精確到小數點後第 4 位（適用於匯率）
+/// 
+/// v2.0 新增：支援利率曲線和波動度曲面
 /// </summary>
 public static class GarmanKohlhagen
 {
@@ -20,16 +24,10 @@ public static class GarmanKohlhagen
     private const double MaxRate = 0.50;
     private const double DeepITMThreshold = 20.0;
 
+    #region Original API (向後相容)
+
     /// <summary>
-    /// Garman-Kohlhagen FX 期權定價（歐式）
-    /// 
-    /// 公式：
-    /// Call = S * e^(-r_f*T) * N(d1) - K * e^(-r_d*T) * N(d2)
-    /// Put = K * e^(-r_d*T) * N(-d2) - S * e^(-r_f*T) * N(-d1)
-    /// 
-    /// 其中：
-    /// d1 = [ln(S/K) + (r_d - r_f + σ²/2)T] / (σ√T)
-    /// d2 = d1 - σ√T
+    /// Garman-Kohlhagen FX 期權定價（歐式）- 原始 API
     /// </summary>
     /// <param name="spot">即期匯率（本幣每 1 外幣，例如 TWD/USD = 30.5）</param>
     /// <param name="strike">履約價（本幣每 1 外幣）</param>
@@ -70,6 +68,107 @@ public static class GarmanKohlhagen
         // === 核心計算 ===
         return CalculatePriceCore(spot, strike, rDomestic, rForeign, volatility, timeToMaturity, optionType);
     }
+
+    #endregion
+
+    #region Advanced API with Curves and Surfaces
+
+    /// <summary>
+    /// Garman-Kohlhagen FX 期權定價（使用利率曲線和波動度曲面）
+    /// 
+    /// 優勢：
+    /// - 精確的期限結構定價
+    /// - 考慮 Volatility Smile/Skew
+    /// - 更貼近實務市場
+    /// </summary>
+    /// <param name="spot">即期匯率</param>
+    /// <param name="strike">履約價</param>
+    /// <param name="domesticCurve">本幣利率曲線</param>
+    /// <param name="foreignCurve">外幣利率曲線</param>
+    /// <param name="volSurface">波動度曲面</param>
+    /// <param name="timeToMaturity">到期時間（年）</param>
+    /// <param name="optionType">期權類型</param>
+    /// <returns>期權價格（本幣單位）</returns>
+    public static double PriceWithCurves(
+        double spot,
+        double strike,
+        IZeroCurve domesticCurve,
+        IZeroCurve foreignCurve,
+        IVolSurface volSurface,
+        double timeToMaturity,
+        OptionType optionType)
+    {
+        ArgumentNullException.ThrowIfNull(domesticCurve);
+        ArgumentNullException.ThrowIfNull(foreignCurve);
+        ArgumentNullException.ThrowIfNull(volSurface);
+
+        // 從曲線取得利率
+        double rDomestic = domesticCurve.GetZeroRate(timeToMaturity);
+        double rForeign = foreignCurve.GetZeroRate(timeToMaturity);
+
+        // 從曲面取得波動度（考慮 Strike）
+        double volatility = volSurface.GetVolatility(strike, timeToMaturity);
+
+        // 使用核心定價函數
+        return PriceFxOption(spot, strike, rDomestic, rForeign, volatility, timeToMaturity, optionType);
+    }
+
+    /// <summary>
+    /// 使用折現因子直接定價（最精確）
+    /// </summary>
+    public static double PriceWithDiscountFactors(
+        double spot,
+        double strike,
+        double dfDomestic,
+        double dfForeign,
+        double volatility,
+        double timeToMaturity,
+        OptionType optionType)
+    {
+        if (dfDomestic <= 0 || dfDomestic > 1.0)
+            throw new ArgumentOutOfRangeException(nameof(dfDomestic));
+
+        if (dfForeign <= 0 || dfForeign > 1.0)
+            throw new ArgumentOutOfRangeException(nameof(dfForeign));
+
+        if (timeToMaturity < MinTimeToMaturity)
+        {
+            return CalculateIntrinsicValue(spot, strike, optionType);
+        }
+
+        if (volatility < MinVolatility)
+        {
+            return CalculateIntrinsicValue(spot, strike, optionType);
+        }
+
+        // 計算 d1 和 d2
+        double sqrtT = Math.Sqrt(timeToMaturity);
+        double volSqrtT = volatility * sqrtT;
+        double volSquaredHalf = 0.5 * volatility * volatility;
+        
+        // 從 DF 反推利率（用於 d1/d2 計算）
+        double rDomestic = -Math.Log(dfDomestic) / timeToMaturity;
+        double rForeign = -Math.Log(dfForeign) / timeToMaturity;
+
+        double lnMoneyness = Math.Log(spot / strike);
+        double d1 = (lnMoneyness + (rDomestic - rForeign + volSquaredHalf) * timeToMaturity) / volSqrtT;
+        double d2 = d1 - volSqrtT;
+
+        // 直接使用 DF（無需再次計算 exp）
+        double nd1 = MathFx.NormalCdf(d1);
+        double nd2 = MathFx.NormalCdf(d2);
+
+        return optionType switch
+        {
+            OptionType.Call => spot * dfForeign * nd1 - strike * dfDomestic * nd2,
+            OptionType.Put => strike * dfDomestic * (1.0 - nd2) - spot * dfForeign * (1.0 - nd1),
+            _ => throw new ArgumentOutOfRangeException(nameof(optionType))
+        };
+    }
+
+    #endregion
+
+    #region Helper Methods (existing)
 
     /// <summary>
     /// 核心定價計算（已優化）
@@ -139,12 +238,6 @@ public static class GarmanKohlhagen
 
         bool isDeepOTM = (optionType == OptionType.Call && d1 < -DeepITMThreshold) ||
                          (optionType == OptionType.Put && d1 > DeepITMThreshold);
-
-        if (isDeepOTM)
-        {
-            price = 0.0;
-            return true;
-        }
 
         if (isDeepOTM)
         {
@@ -320,5 +413,7 @@ public static class GarmanKohlhagen
 
         return spot * dfForeign * npd1 * sqrtT;
     }
+
+    #endregion
 }
 
