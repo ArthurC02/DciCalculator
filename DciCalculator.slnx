@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DciCalculator.Tests/DciCalculator.Tests.csproj" />
+  <Project Path="DciCalculator/DciCalculator.csproj" />
+</Solution>
