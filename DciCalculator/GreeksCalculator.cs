@@ -1,14 +1,26 @@
 using DciCalculator.Algorithms;
 using DciCalculator.Models;
+using DciCalculator.PricingModels;
+using DciCalculator.Services.Pricing;
 
 namespace DciCalculator;
 
 /// <summary>
-/// 外匯選擇權 Greeks 計算器（採用 Garman-Kohlhagen 模型）
+/// 外匯選擇權 Greeks 計算器 - 靜態包裝類別
+/// 
+/// [已棄用] 此靜態類別保留用於向後兼容。
+/// 新代碼請使用 <see cref="GreeksCalculatorService"/> 以支援依賴注入和更好的測試性。
+/// 
 /// 提供 Delta、Gamma、Vega、Theta、Rho 等風險敏感度計算。
+/// 
+/// v2.1 重構：內部委託給 GreeksCalculatorService 實例
 /// </summary>
+[Obsolete("請使用 GreeksCalculatorService 類別以支援依賴注入。此靜態類別將在未來版本移除。", false)]
 public static class GreeksCalculator
 {
+    // 內部使用的計算器實例（單例模式用於靜態類別）
+    private static readonly GreeksCalculatorService _calculator = new(new GarmanKohlhagenModel());
+
     /// <summary>
     /// 計算單一 FX 選擇權全部 Greeks（使用 Garman-Kohlhagen）。
     /// </summary>
@@ -21,10 +33,7 @@ public static class GreeksCalculator
         double timeToMaturity,
         OptionType optionType)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(spot);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(strike);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(volatility);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(timeToMaturity);
+        return _calculator.CalculateGreeks(spot, strike, rDomestic, rForeign, volatility, timeToMaturity, optionType);
 
         double sqrtT = Math.Sqrt(timeToMaturity);
         double volSqrtT = volatility * sqrtT;
@@ -127,28 +136,6 @@ public static class GreeksCalculator
     /// </summary>
     public static GreeksResult CalculateDciGreeks(DciInput input)
     {
-        double spotD = (double)input.SpotQuote.Mid;
-        double strikeD = (double)input.Strike;
-
-        // DCI 結構屬賣出 Put，Greeks 需調整為反向
-        var putGreeks = CalculateGreeks(
-            spot: spotD,
-            strike: strikeD,
-            rDomestic: input.RateDomestic,
-            rForeign: input.RateForeign,
-            volatility: input.Volatility,
-            timeToMaturity: input.TenorInYears,
-            optionType: OptionType.Put
-        );
-
-        // 賣出 Put 之 Greeks = -1 * 買入 Put 之 Greeks
-        return new GreeksResult(
-            Delta: -putGreeks.Delta,
-            Gamma: -putGreeks.Gamma,
-            Vega: -putGreeks.Vega,
-            Theta: -putGreeks.Theta,
-            RhoDomestic: -putGreeks.RhoDomestic,
-            RhoForeign: -putGreeks.RhoForeign
-        );
+        return _calculator.CalculateDciGreeks(input);
     }
 }

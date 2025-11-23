@@ -43,8 +43,14 @@ public enum DayCountConvention
 /// Day Count 計算工具
 /// 提供年期比例、到期日、Tenor 解析與工作天相關運算
 /// </summary>
+/// <remarks>
+/// 此靜態類別維持向後相容性，內部使用策略模式實作。
+/// 新程式碼建議使用 DI 注入 IDayCountCalculator 或 DayCountCalculatorFactory。
+/// </remarks>
 public static class DayCountCalculator
 {
+    private static readonly DayCount.DayCountCalculatorFactory _factory = new();
+
     /// <summary>
     /// 計算年期比例 (Year Fraction)
     /// </summary>
@@ -57,18 +63,8 @@ public static class DayCountCalculator
         DateTime endDate,
         DayCountConvention convention = DayCountConvention.Act365)
     {
-        if (endDate < startDate)
-            throw new ArgumentException("結束日期必須 >= 起始日期");
-
-        return convention switch
-        {
-            DayCountConvention.Act365 => CalculateAct365(startDate, endDate),
-            DayCountConvention.Act360 => CalculateAct360(startDate, endDate),
-            DayCountConvention.ActAct => CalculateActAct(startDate, endDate),
-            DayCountConvention.Thirty360 => CalculateThirty360(startDate, endDate),
-            DayCountConvention.Bus252 => CalculateBus252(startDate, endDate),
-            _ => throw new ArgumentOutOfRangeException(nameof(convention))
-        };
+        var calculator = _factory.GetCalculator(convention);
+        return calculator.YearFraction(startDate, endDate);
     }
 
     /// <summary>
