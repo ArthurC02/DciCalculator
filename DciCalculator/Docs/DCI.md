@@ -1,4 +1,4 @@
-# DCI Pricing Engine – 技術與產品文件 (v2.1 / .NET 8 / 2025-11)
+# DCI Pricing Engine – 技術與產品文件 (v3.0 / .NET 8 / 2025-11)
 
 本專案為 **DCI（Dual Currency Investment，雙幣投資）** 報價、風險與情境分析引擎。核心涵蓋：
 期權定價 (FX / Equity)、Greeks、Strike 反求、Margin 調整、日數換算、利率曲線展期、波動率曲面插值、情境與 Monte Carlo 分佈。
@@ -6,8 +6,8 @@
 > 語言: C# 12  
 > Runtime: .NET 8  
 > 精度策略: 金額/匯率 `decimal`；數值/統計 `double`  
-> 設計: Immutable record + 靜態計算模組 + 無副作用  
-> 依賴: MathNet.Numerics (Normal CDF/PDF)
+> 設計: 依賴注入 (DI) + SOLID 原則 + Immutable record + 無副作用  
+> 依賴: Microsoft.Extensions.DependencyInjection, MathNet.Numerics
 
 ---
 
@@ -59,58 +59,100 @@ DCI = 外幣存款 (本金 + 存款利息) + 賣出一枚 FX Put (收取期權�
 ## 4. 專案分層架構
 
 ```text
+Core/              核心介面定義 (IPricingModel, IDciPricingEngine, IGreeksCalculator...)
+Services/          業務邏輯服務 (DciPricingEngine, GreeksCalculatorService, MarginService...)
+  ├─ Pricing/      定價相關服務
+  └─ Margin/       保證金計算服務
+PricingModels/     定價模型實作 (GarmanKohlhagenModel)
 Algorithms/        數值與定價核心 (BlackSholes.cs, GarmanKohlhagen.cs, FxMath.cs)
-Curves/            利率曲線接口與展期 (IZeroCurve, FlatZeroCurve, LinearInterpolatedCurve, CubicSplineCurve, CurveBootstrapper, Instruments)
+Curves/            利率曲線 (IZeroCurve, FlatZeroCurve, LinearInterpolatedCurve, CubicSplineCurve)
 VolSurfaces/       波動率曲面 (IVolSurface, FlatVolSurface, InterpolatedVolSurface)
-Models/            Immutable Domain Records (DciInput, DciQuoteResult, DciPayoffResult, GreeksResult, FxQuote, CurvePoint, VolSurfacePoint...)
-Calculators/Root   高階邏輯 (DciPricer, DciPayoffCalculator, MarginCalculator, StrikeSolver, ScenarioAnalyzer, DayCountCalculator, GreeksCalculator)
+Factories/         工廠類別 (CurveFactory, VolSurfaceFactory)
+Builders/          建構器模式 (DciInputBuilder, MarketDataSnapshotBuilder)
+Validation/        驗證框架 (IValidator, ValidationPipeline)
+DayCount/          日數計算策略 (Act365Calculator, Act360Calculator...)
+DependencyInjection/  DI 註冊 (ServiceCollectionExtensions)
+Models/            Immutable Domain Records (DciInput, DciQuoteResult...)
+[舊類別]/          向後相容的靜態包裝 (已標記 Obsolete)
 Tests/             單元與整合測試
 Docs/              本文件
 ```
 
 核心設計要點：
 
-- 全部計算類別多為 `static`：無狀態、可並行。
-- 資料結構使用 record/readonly struct：減少可變性與防止意外共享。
-- 嚴格參數檢核：負值、零值、極端值、NaN/Infinity 立即擲例外。
-- Deep ITM/OTM：`|d1| > 20` 直接內含價值近似，提高速度。
+- **依賴注入優先**：所有服務可透過 DI 容器註冊與注入
+- **SOLID 原則**：介面分離、依賴反轉、開放封閉原則
+- **無狀態服務**：所有服務為 Singleton，執行緒安全
+- **資料不可變**：使用 record/readonly struct
+- **嚴格參數檢核**：負值、零值、極端值、NaN/Infinity 立即擲例外
+- **向後相容**：保留靜態 API（標記為 Obsolete）
+- **Deep ITM/OTM**：`|d1| > 20` 直接內含價值近似，提高速度
 
 ---
 
-## 5. 主要 API 節點 (節選)
+## 5. 主要 API 節點
+
+### 5.1 依賴注入方式（建議）
 
 ```csharp
-// FX 期權定價 (原始 API)
-double GarmanKohlhagen.PriceFxOption(double spot, double strike,
-    double rDomestic, double rForeign, double vol, double T, OptionType type);
+// 註冊服務
+services.AddDciServices();
 
-// 使用曲線與波動率曲面
-double GarmanKohlhagen.PriceWithCurves(double spot, double strike,
-    IZeroCurve domCurve, IZeroCurve forCurve, IVolSurface volSurface,
-    double T, OptionType type);
+// 透過建構子注入使用
+public class TradingService
+{
+    private readonly IDciPricingEngine _pricingEngine;
+    private readonly IGreeksCalculator _greeksCalculator;
+    private readonly IStrikeSolver _strikeSolver;
+    
+    public TradingService(
+        IDciPricingEngine pricingEngine,
+        IGreeksCalculator greeksCalculator,
+        IStrikeSolver strikeSolver)
+    {
+        _pricingEngine = pricingEngine;
+        _greeksCalculator = greeksCalculator;
+        _strikeSolver = strikeSolver;
+    }
+    
+    public void ProcessTrade()
+    {
+        // DCI 報價
+        var quote = _pricingEngine.Quote(input);
+        var quoteWithMargin = _pricingEngine.QuoteWithMargin(input, 0.10);
+        
+        // Greeks
+        var greeks = _greeksCalculator.CalculateDciGreeks(input, quote);
+        
+        // Strike 求解
+        var strike = _strikeSolver.SolveStrike(input, 0.08);
+    }
+}
+```
+
+### 5.2 靜態 API（舊版，已棄用）
+
+```csharp
+// ⚠️ 以下為向後相容的靜態 API，標記為 Obsolete
+// 新程式碼請使用依賴注入方式
+
+// FX 期權定價
+double GarmanKohlhagen.PriceFxOption(...);
 
 // DCI 報價
 DciQuoteResult DciPricer.Quote(DciInput input);
-DciQuoteResult DciPricer.QuoteWithMargin(DciInput input, double marginPercent);
 
 // Greeks
 GreeksResult GreeksCalculator.CalculateDciGreeks(DciInput input);
 
-// Strike 求解 / 梯形
-decimal StrikeSolver.SolveStrike(DciInput input, double targetCoupon, decimal? initialGuess = null);
-IReadOnlyList<(decimal Strike, double Coupon)> StrikeSolver.GenerateStrikeLadder(...);
+// Strike 求解
+decimal StrikeSolver.SolveStrike(...);
 
 // Margin
-decimal MarginCalculator.ApplyMarginToStrike(decimal strike, decimal marginPips, decimal pipSize = 0.01m);
-double  MarginCalculator.SolveMarginForTargetCoupon(double theoreticalCoupon, double targetCoupon);
+decimal MarginCalculator.ApplyMarginToStrike(...);
 
-// 日數換算
-double DayCountCalculator.YearFraction(DateTime start, DateTime end, DayCountConvention conv);
-
-// 情境與報告
-IReadOnlyList<ScenarioResult> ScenarioAnalyzer.Analyze(DciInput baseInput, IEnumerable<decimal> spotShifts, IEnumerable<double> volShifts);
-string ScenarioAnalyzer.GenerateReport(IReadOnlyList<ScenarioResult> results);
-PnLDistribution ScenarioAnalyzer.CalculatePnLDistribution(DciInput input, int scenarios = 100, double spotVolatility = 0.10);
+// 情境分析
+IReadOnlyList<ScenarioResult> ScenarioAnalyzer.Analyze(...);
 ```
 
 ---
@@ -159,8 +201,23 @@ Greeks：採 Garman-Kohlhagen，賣出 Put 方向自動翻轉（部位視角）�
 
 ## 9. 使用範例
 
+### 9.1 依賴注入方式（建議）
+
 ```csharp
-// 建立輸入
+using Microsoft.Extensions.DependencyInjection;
+using DciCalculator.DependencyInjection;
+
+// 1. 註冊服務
+var services = new ServiceCollection();
+services.AddDciServices();
+var serviceProvider = services.BuildServiceProvider();
+
+// 2. 取得服務
+var pricingEngine = serviceProvider.GetRequiredService<IDciPricingEngine>();
+var greeksCalculator = serviceProvider.GetRequiredService<IGreeksCalculator>();
+var strikeSolver = serviceProvider.GetRequiredService<IStrikeSolver>();
+
+// 3. 建立輸入
 var input = new DciInput(
     NotionalForeign: 10_000m,
     SpotQuote: new FxQuote(30.48m, 30.52m),
@@ -171,26 +228,36 @@ var input = new DciInput(
     TenorInYears: 90.0 / 365.0,
     DepositRateAnnual: 0.03);
 
-// 基本報價
+// 4. 使用服務
+var quote = pricingEngine.Quote(input);
+var quoteWithMargin = pricingEngine.QuoteWithMargin(input, 0.10);
+var greeks = greeksCalculator.CalculateDciGreeks(input, quote);
+var strikeFor8Pct = strikeSolver.SolveStrike(input, 0.08);
+```
+
+### 9.2 使用 Builder 模式
+
+```csharp
+using DciCalculator.Builders;
+
+// 流暢 API 建立輸入
+var input = DciInputBuilder.CreateTypicalUsdTwd()
+    .WithNotional(10_000m)
+    .WithStrike(30.00m)
+    .WithTenorDays(90)
+    .WithDepositRate(0.03)
+    .Build();
+
+var quote = pricingEngine.Quote(input);
+```
+
+### 9.3 靜態 API（舊版）
+
+```csharp
+// ⚠️ 此方式已棄用，僅供向後相容
 var quote = DciPricer.Quote(input);
-// 加入 Margin (10%)
-var quoteMargin = DciPricer.QuoteWithMargin(input, 0.10);
-// Greeks
 var greeks = GreeksCalculator.CalculateDciGreeks(input);
-// 目標 8% Coupon 反求 Strike
 var strikeFor8Pct = StrikeSolver.SolveStrike(input, 0.08);
-// 利率曲線 + 波動率曲面定價
-var usdCurve = new FlatZeroCurve("USD", 0.05);
-var twdCurve = new FlatZeroCurve("TWD", 0.015);
-var volSurface = new FlatVolSurface("USD/TWD", 0.10);
-double priceWithCurves = GarmanKohlhagen.PriceWithCurves(
-    spot: (double)input.SpotQuote.Mid,
-    strike: (double)input.Strike,
-    domesticCurve: twdCurve,
-    foreignCurve: usdCurve,
-    volSurface: volSurface,
-    timeToMaturity: input.TenorInYears,
-    optionType: OptionType.Put);
 ```
 
 ---
@@ -221,26 +288,29 @@ double priceWithCurves = GarmanKohlhagen.PriceWithCurves(
 
 ---
 
-## 12. 未來路線圖
+## 12. 未來擴充方向
 
-- Vol Surface Bootstrapping (Smile 參數化)  
-- Barrier / KI / KO 結構化 DCI  
-- 交易生命週期 / Position Aggregation  
-- Calendar / Holiday 支援  
-- 分散式計算 (批量報價)  
-- CVA/DVA 初步框架  
-- 更高階 Greeks (Vanna / Volga)  
-- 曲線/曲面 JSON 序列化與外部匯入
+- Vol Surface Bootstrapping（Smile 參數化）
+- Barrier / KI / KO 結構化產品
+- 交易生命週期管理
+- 行事曆與假日支援
+- 分散式計算（批量報價）
+- CVA/DVA 對手風險評估
+- 高階 Greeks（Vanna / Volga）
+- 曲線/曲面序列化與外部資料匯入
 
 ---
 
 ## 13. 版本資訊
 
-版本: 2.1  
-最後更新: 2025-11-23  
-維護: DCI Pricing Engine Team  
-授權: 參見根目錄 `LICENSE.txt`
+**版本**: 3.0  
+**最後更新**: 2025-11-24  
+**Runtime**: .NET 8  
+**授權**: 參見根目錄 `LICENSE.txt`
 
 ---
 
-（本文件已根據目前程式碼實作重新整理，取代舊版 2.0 內容。）
+## 14. 相關文件
+
+- [依賴注入使用指南](./DependencyInjection-Guide.md) - DI 設定與最佳實踐
+- [架構文件](./Architecture-Review.md) - 完整架構說明與 SOLID 設計

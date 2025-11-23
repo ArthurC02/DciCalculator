@@ -1,8 +1,13 @@
 # DCI Calculator 依賴注入使用指南
 
+**版本**: 3.0  
+**最後更新**: 2025-11-24
+
+---
+
 ## 概述
 
-DCI Calculator 現在完全支援依賴注入 (Dependency Injection, DI)，所有核心服務都已重構為可注入的實例服務，同時保留了向後相容的靜態 API。
+DCI Calculator 完全支援依賴注入 (Dependency Injection, DI)，所有核心服務都已重構為可注入的實例服務，同時保留了向後相容的靜態 API。
 
 ## 快速開始
 
@@ -77,6 +82,9 @@ var quote = pricingEngine.Quote(input);
 | `IMarginService` | `MarginService` | 保證金與價差計算 |
 | `IStrikeSolver` | `StrikeSolverService` | Strike 反推求解器 |
 | `IScenarioAnalyzer` | `ScenarioAnalyzerService` | 情境分析與蒙地卡羅模擬 |
+| `IDciPayoffCalculator` | `DciPayoffCalculatorService` | DCI 到期損益計算 |
+| `ICurveFactory` | `CurveFactory` | 利率曲線工廠 |
+| `IVolSurfaceFactory` | `VolSurfaceFactory` | 波動率曲面工廠 |
 
 ## 進階配置
 
@@ -246,7 +254,7 @@ A: DCI 計算服務都是無狀態的純函數，使用 Singleton 可提供最�
 
 ### Q: 舊的靜態 API 何時移除？
 
-A: 計劃在下一個主要版本 (v2.0) 移除，給予充足的遷移時間。
+A: 計劃在下一個主要版本 (v4.0) 移除，給予充足的遷移時間。當前版本 (v3.0) 仍完全支援靜態 API。
 
 ### Q: 可以混用靜態 API 和 DI API 嗎？
 
@@ -265,5 +273,10 @@ A: 參考「快速開始」章節，使用 `ServiceCollection` 和 `ServiceProvi
 
 ## 相關文件
 
-- [Architecture Review](./Architecture-Review.md) - 完整架構評審與重構計畫
-- [DCI 產品說明](./DCI.md) - DCI 結構說明
+- [架構文件](./Architecture-Review.md) - 專案架構設計與 SOLID 原則評估
+- [DCI 產品說明](./DCI.md) - DCI 結構與技術文件
+
+---
+
+**文件版本**：3.0  
+**最後更新**：2025-11-24
